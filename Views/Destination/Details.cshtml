@@ -1,0 +1,209 @@
+@model Destination
+@{
+    ViewData["Title"] = $"{Model.Name} - Destination Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Destination Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="position-relative" style="height: 400px; border-radius: 12px; overflow: hidden;">
+                <img src="@Model.ImageUrl" style="width: 100%; height: 100%; object-fit: cover;" alt="@Model.Name" />
+                <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);"></div>
+                <div class="position-absolute bottom-0 start-0 p-4 text-white">
+                    <h1 class="display-3 fw-bold">@Model.Name</h1>
+                    <p class="fs-4">@Model.City, @Model.Country</p>
+                </div>
+                <div class="position-absolute top-0 end-0 p-3">
+                    <span class="badge bg-danger px-3 py-2" style="font-size: 1rem;">
+                        <i class="fas fa-star me-1"></i>@Model.AverageRating.ToString("F1") (@Model.ReviewCount reviews)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Description -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About</h5>
+                </div>
+                <div class="card-body">
+                    <p>@Model.Description</p>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-map-pin me-2 text-primary"></i>Category:</strong><br>
+                            <span class="badge bg-info">@Model.Category</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-cloud me-2 text-info"></i>Weather:</strong><br>
+                            <span class="text-muted">@Model.WeatherType</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attractions -->
+            @if (Model.Attractions?.Count > 0)
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-landmark me-2"></i>Top Attractions (@Model.Attractions.Count)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @foreach (var attraction in Model.Attractions.Take(6))
+                            {
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        @if (!string.IsNullOrEmpty(attraction.ImageUrl))
+                                        {
+                                            <img src="@attraction.ImageUrl" class="card-img-top" style="height: 150px; object-fit: cover;" alt="@attraction.Name" />
+                                        }
+                                        <div class="card-body">
+                                            <h6 class="card-title fw-bold">@attraction.Name</h6>
+                                            <span class="badge bg-secondary">@attraction.Category</span>
+                                            @if (!string.IsNullOrEmpty(attraction.EntryFee))
+                                            {
+                                                <small class="d-block text-muted mt-2">Entry: @attraction.EntryFee</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Image Gallery -->
+            @if (Model.Images?.Count > 0)
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-images me-2"></i>Photo Gallery</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            @foreach (var image in Model.Images.Take(9))
+                            {
+                                <div class="col-md-4">
+                                    <img src="@image.ImageUrl" class="img-fluid rounded" style="width: 100%; height: 150px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#imageModal" alt="@image.Title" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Reviews -->
+            @if (Model.Reviews?.Count > 0)
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Recent Reviews</h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var review in Model.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt).Take(5))
+                        {
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>@review.User?.FirstName @review.User?.LastName</strong>
+                                        <div class="text-warning small">
+                                            @for (int i = 0; i < review.Rating; i++)
+                                            {
+                                                <i class="fas fa-star"></i>
+                                            }
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">@review.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </div>
+                                <h6 class="mt-2">@review.Title</h6>
+                                <p class="text-muted">@review.Content</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Info -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Quick Info</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Best Time to Visit:</strong><br>
+                        <span class="text-muted">Month @Model.BestTimeToVisit</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Coordinates:</strong><br>
+                        <span class="text-muted">@Model.Latitude, @Model.Longitude</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Category:</strong><br>
+                        <span class="badge bg-primary">@Model.Category</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Popularity:</strong><br>
+                        @if (Model.IsPopular)
+                        {
+                            <span class="badge bg-success">Popular Destination</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Hidden Gem</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <a href="/trip/create" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Plan Trip Here
+                            </a>
+                            <button type="button" class="btn btn-outline-warning">
+                                <i class="fas fa-heart me-2"></i>Add to Favorites
+                            </button>
+                        }
+                        else
+                        {
+                            <a href="/account/register" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Sign Up to Plan
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Average Rating:</strong><br>
+                        <h4 class="text-warning">@Model.AverageRating.ToString("F1") / 5.0</h4>
+                    </div>
+                    <div>
+                        <strong>Total Reviews:</strong><br>
+                        <h4 class="text-primary">@Model.ReviewCount</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

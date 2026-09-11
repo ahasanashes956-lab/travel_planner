@@ -1,0 +1,18 @@
+{
+  "name": "Travel Planner BD",
+  "short_name": "Travel Planner",
+  "description": "Travel planning app for Bangladesh trips and destinations.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f3ef",
+  "theme_color": "#0b7a6d",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

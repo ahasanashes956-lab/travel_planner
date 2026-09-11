@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Trip - Travel Planner</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=20260909-notification-ui">
+    <link rel="stylesheet" href="css/ui-polish.css?v=20260908-ui">
+</head>
+<body class="create-trip-page">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="fas fa-map-marker-alt text-success me-2"></i>Travel Planner BD
+            </a>
+            <div class="ms-auto d-flex gap-2">
+                <a class="nav-link d-none d-md-inline-block" href="/index.html">Home</a>
+                <a class="nav-link d-none d-md-inline-block" href="/destinations.html">Destinations</a>
+                <a class="nav-link d-none d-md-inline-block" href="/dashboard.html">Dashboard</a>
+                <a class="nav-link d-none d-md-inline-block" href="/trips.html">My Trips</a>
+                <a class="nav-link d-none d-md-inline-block" href="/profile.html">Profile</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="page-hero mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <div class="hero-pill"><i class="fas fa-pen-nib"></i> Trip builder</div>
+                    <h1 class="fw-bold mt-3 mb-2"><i class="fas fa-plus-circle me-2"></i>Create New Trip</h1>
+                    <p class="mb-0 text-white-50">Turn your selected destination into a polished itinerary with a refined planning experience.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="destinationHint" class="alert alert-info rounded-4 d-none mb-4"></div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow soft-card">
+                    <div class="card-body p-4">
+                        <form id="createTripForm">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label for="tripTitle" class="form-label fw-bold">Trip Title</label>
+                                        <input type="text" class="form-control form-control-lg" id="tripTitle" placeholder="e.g., Summer Vacation to Paris" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="destination" class="form-label fw-bold">Destination</label>
+                                        <select class="form-select form-select-lg" id="destination" required>
+                                            <option value="">Select a destination...</option>
+                                            <!-- Populated by JS -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="tripType" class="form-label fw-bold">Trip Type</label>
+                                        <select class="form-select form-select-lg" id="tripType" required>
+                                            <option value="">Select trip type...</option>
+                                            <option value="Solo">Solo</option>
+                                            <option value="Family">Family</option>
+                                            <option value="Friends">Friends</option>
+                                            <option value="Business">Business</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="startDate" class="form-label fw-bold">Start Date</label>
+                                        <input type="date" class="form-control form-control-lg" id="startDate" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="endDate" class="form-label fw-bold">End Date</label>
+                                        <input type="date" class="form-control form-control-lg" id="endDate" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="travelers" class="form-label fw-bold">Number of Travelers</label>
+                                        <input type="number" class="form-control form-control-lg" id="travelers" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="budget" class="form-label fw-bold">Budget Limit (৳)</label>
+                                        <input type="number" class="form-control form-control-lg" id="budget" step="0.01" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label fw-bold">Description</label>
+                                <textarea class="form-control" id="description" rows="4" placeholder="Tell us about your trip plans..."></textarea>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="trips.html" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-check me-2"></i>Create Trip
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow bg-light soft-card">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-3">
+                            <i class="fas fa-lightbulb text-warning me-2"></i>Trip Planning Tips
+                        </h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Choose a clear trip title</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Set a realistic budget</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Plan with a buffer for unexpected expenses</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Add all travelers to your plan</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Research your destination first</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p>&copy; 2026 Travel Planner. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js?v=20260911-plan-trip-single"></script>
+    <script src="js/auth.js?v=20260909-notification-flow"></script>
+    <script src="js/trip-form.js?v=20260911-plan-trip-single"></script>
+</body>
+</html>

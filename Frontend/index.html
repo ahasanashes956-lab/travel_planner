@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b7a6d">
+    <meta name="description" content="Travel Planner BD helps you plan beautiful trips across Bangladesh with ease.">
+    <title>Travel Planner - Plan Your Next Adventure</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=20260909-notification-ui">
+    <link rel="stylesheet" href="css/ui-polish.css?v=20260911-coastal-atlas">
+</head>
+<body class="index-page">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/index.html">
+                <i class="fas fa-map-marker-alt text-success me-2"></i>Travel Planner BD
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/destinations.html">Destinations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/trips.html">My Trips</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/profile.html">Profile</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary btn-sm text-white ms-2" href="login.html">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-white py-5">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-7 d-flex flex-column justify-content-center">
+                    <div class="hero-badges">
+                        <span class="hero-badge"><i class="fas fa-sparkles me-2"></i>Smart itinerary planning</span>
+                        <span class="hero-badge"><i class="fas fa-map-marked-alt me-2"></i>Curated Bangladesh escapes</span>
+                        <span class="hero-badge"><i class="fas fa-shield-alt me-2"></i>Clear budget control</span>
+                    </div>
+                    <h1 class="display-4 fw-bold mb-3">Plan beautiful trips across Bangladesh with ease</h1>
+                    <p class="hero-lead mb-4">Discover scenic coastlines, tea gardens, mangroves, and island getaways — then organize every detail into a polished travel plan in minutes.</p>
+
+                    <form id="heroSearchForm" class="hero-search-card mb-3" role="search">
+                        <input id="heroSearchInput" class="form-control border-0 shadow-none" type="search" placeholder="Search destinations, cities or experiences" aria-label="Search">
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-search me-2"></i>Explore</button>
+                    </form>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="/create-trip.html" class="btn btn-light btn-lg">Start Planning</a>
+                        <a href="login.html" class="btn btn-outline-light btn-lg">Sign In</a>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="hero-visual-card">
+                        <div class="mb-3">
+                            <span class="fw-semibold">Why travelers love it</span>
+                        </div>
+                        <div class="hero-stat-grid">
+                            <div class="mini-stat">
+                                <small class="text-white-50">Top destinations</small>
+                                <strong>5+</strong>
+                            </div>
+                            <div class="mini-stat">
+                                <small class="text-white-50">Budget tracking</small>
+                                <strong>BDT synced</strong>
+                            </div>
+                            <div class="mini-stat">
+                                <small class="text-white-50">Planning flow</small>
+                                <strong>Fast & clear</strong>
+                            </div>
+                            <div class="mini-stat">
+                                <small class="text-white-50">Travel support</small>
+                                <strong>Smart guidance</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Features Section -->
+    <section class="py-5 bg-transparent">
+        <div class="container">
+            <div class="section-heading justify-content-center text-center flex-column mb-4">
+                <h2 class="fw-bold">Why travelers choose Travel Planner</h2>
+                <p class="section-subtitle">A refined way to plan, organize, and enjoy every journey.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card border-0 h-100 soft-card hover-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon"><i class="fas fa-map-marked-alt"></i></div>
+                            <h5 class="card-title fw-bold">Smart planning</h5>
+                            <p class="card-text text-muted">Build detailed day-by-day itineraries that feel effortless and easy to follow.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 h-100 soft-card hover-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon"><i class="fas fa-wallet"></i></div>
+                            <h5 class="card-title fw-bold">Budget control</h5>
+                            <p class="card-text text-muted">Stay on top of your travel costs with simple, clear budgeting tools.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 h-100 soft-card hover-card">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon"><i class="fas fa-star"></i></div>
+                            <h5 class="card-title fw-bold">Discover more</h5>
+                            <p class="card-text text-muted">Explore highly-rated destinations and uncover places worth adding to your list.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Destinations -->
+    <section class="py-5">
+        <div class="container">
+            <div class="section-heading justify-content-center text-center flex-column mb-4">
+                <h2 class="fw-bold">Popular destinations</h2>
+                <p class="section-subtitle">Handpicked getaway ideas for your next Bangladesh journey.</p>
+            </div>
+            <div class="text-center mb-4">
+                <div id="categoryFilters" class="d-inline-flex gap-2 flex-wrap"></div>
+            </div>
+            <div class="row g-4" id="popularDestinations">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+    <!-- PATCH_PLACEHOLDER: inserted to ensure patch formatting -->
+
+    <!-- Testimonials -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-4 fw-bold">What travelers say</h2>
+            <div id="testimonialCarousel" class="carousel slide shadow-sm" data-bs-ride="carousel">
+                <div class="carousel-inner p-4 bg-white rounded">
+                    <div class="carousel-item active">
+                        <blockquote class="blockquote text-center mb-0">
+                            <p class="mb-3">"Travel Planner helped me organize a 10-day trip effortlessly. The itinerary and budgeting tools are amazing."</p>
+                            <footer class="blockquote-footer">Aisha K., <cite title="Source Title">Frequent Traveler</cite></footer>
+                        </blockquote>
+                    </div>
+                    <div class="carousel-item">
+                        <blockquote class="blockquote text-center mb-0">
+                            <p class="mb-3">"I found hidden gem destinations and saved so much time. Highly recommended for families."</p>
+                            <footer class="blockquote-footer">Daniel S., <cite title="Source Title">Photographer</cite></footer>
+                        </blockquote>
+                    </div>
+                    <div class="carousel-item">
+                        <blockquote class="blockquote text-center mb-0">
+                            <p class="mb-3">"Love the responsive UI and the trip planner — made planning a breeze."</p>
+                            <footer class="blockquote-footer">Maya P., <cite title="Source Title">Digital Nomad</cite></footer>
+                        </blockquote>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-5 cta-section" style="background: linear-gradient(135deg, #006a4e 0%, #f42a41 100%); color: white;">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-4">Ready to start your journey?</h2>
+            <p class="fs-5 mb-4">Create your account and turn your next travel idea into a beautifully organized plan.</p>
+            <a href="register.html" class="btn btn-light btn-lg">Create free account</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-5 mt-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0 text-md-start">
+                    <h5 class="mb-2">Stay inspired</h5>
+                    <p class="text-white-50 small mb-0">Receive curated travel ideas and seasonal inspiration straight to your inbox.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <form id="newsletterForm" class="d-flex justify-content-center justify-content-md-end" role="search">
+                        <input id="newsletterEmail" type="email" class="form-control me-2" placeholder="Your email" aria-label="Email" required>
+                        <button class="btn btn-primary" type="submit">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+            <p class="mb-0">&copy; 2026 Travel Planner BD. Based in Bangladesh. All rights reserved. | <a href="privacy.html" class="text-decoration-none text-white-50">Privacy Policy</a></p>
+        </div>
+    </footer>
+
+    <!-- Destination Modal -->
+    <div class="modal fade" id="destinationModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Destination</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js?v=20260909-nav-notifications"></script>
+</body>
+</html>

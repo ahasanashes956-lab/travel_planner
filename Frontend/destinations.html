@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destinations - Travel Planner</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=20260909-notification-ui">
+    <link rel="stylesheet" href="css/ui-polish.css?v=20260908-ui">
+</head>
+<body class="destinations-page">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/index.html">
+                <i class="fas fa-map-marker-alt text-success me-2"></i>Travel Planner BD
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/destinations.html">Destinations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/trips.html">My Trips</a></li>
+                    <li id="navAdminLi" class="nav-item d-none"><a class="nav-link" href="admin.html">Admin</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO / Intro -->
+    <header class="hero-section py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <div class="d-inline-flex align-items-center gap-2 rounded-pill px-3 py-2 mb-3 hero-pill-soft">
+                        <i class="fas fa-sparkles text-warning"></i>
+                        <span class="fw-semibold">Smart Destination Support System</span>
+                    </div>
+                    <h1 class="display-5 fw-bold">Supported Bangladesh Destinations</h1>
+                    <p class="lead text-muted">Browse available destinations, validate support instantly, and start trip planning when your chosen spot is ready.</p>
+                    <div class="hero-badges mt-3">
+                        <span class="hero-pill"><i class="fas fa-check-circle me-2"></i>Planning Ready</span>
+                        <span class="hero-pill"><i class="fas fa-map-marked-alt me-2"></i>Nearby Suggestions</span>
+                        <span class="hero-pill"><i class="fas fa-bell me-2"></i>Notify When Available</span>
+                    </div>
+                    <div class="mt-3" id="heroActions">
+                        <div class="input-group input-group-lg" style="max-width:720px;">
+                            <input id="searchInputHero" type="text" class="form-control" placeholder="Search destinations, city or attraction...">
+                            <button class="btn btn-primary" id="searchHeroBtn"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-lg-end mt-4 mt-lg-0">
+                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=6e9c3a5d2b0c6b7d8f4a7a6b9c1d2e3f" alt="destinations" class="img-fluid rounded shadow-lg" style="max-height:260px; object-fit:cover;">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Availability Modal (for unsupported destinations) -->
+    <div class="modal fade" id="availabilityModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Destination Unavailable</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="availabilityContent">
+                        <!-- Filled by JS -->
+                        <p class="lead">Sorry, this destination is not currently supported by our trip planner.</p>
+                        <div id="suggestionsList" class="mb-3"></div>
+
+                        <div class="d-flex gap-2">
+                            <button id="viewSupportedBtn" class="btn btn-outline-primary">View Supported Areas</button>
+                            <button id="openNotifyModalBtn" class="btn btn-primary">Notify Me When Available</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notify Modal (polished form) -->
+    <div class="modal fade" id="notifyModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Notify Me</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="notifyForm">
+                        <div class="mb-3">
+                            <label for="notifyEmail" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="notifyEmail" placeholder="you@example.com" required>
+                        </div>
+                        <input type="hidden" id="notifyDestId" />
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Notify me when available</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="fw-bold mb-4">
+                    <i class="fas fa-globe me-2 text-primary"></i>Explore Destinations
+                </h1>
+            </div>
+        </div>
+
+        <!-- Available Destinations Dashboard -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-card p-4 rounded shadow-sm bg-white">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <h2 class="mb-1">Available Destinations</h2>
+                            <p class="text-muted mb-0">All supported Bangladesh destinations are listed below. Select one to view details or start planning.</p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-light text-dark fs-6" id="destCount">0 destinations</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="dashboardFilters">
+                        <!-- Category chips populated by JS (falls back to All) -->
+                        <button class="btn btn-sm btn-outline-secondary filter-chip active" data-cat="All">All</button>
+                    </div>
+
+                    <div class="row" id="dashboardList">
+                        <!-- Dashboard cards rendered by destinations.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured screenshots removed as requested -->
+
+        <!-- Search Bar -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex gap-2">
+                    <input type="text" class="form-control form-control-lg" id="searchInput" placeholder="Search destinations...">
+                    <button class="btn btn-primary btn-lg" onclick="searchDestinations()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Destinations Grid -->
+        <div class="row g-4" id="destinationsList">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- Destination Modal -->
+    <div class="modal fade" id="destinationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Destination Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Content populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-1">&copy; 2026 Travel Planner BD. Based in Bangladesh. All rights reserved.</p>
+            <p class="small mb-0">Contact: info@travelplannerbd.com | +8801XXXXXXXXX</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js?v=20260911-destination-id-fix"></script>
+    <script src="js/destinations.js?v=20260911-image-fallbacks"></script>
+</body>
+</html>

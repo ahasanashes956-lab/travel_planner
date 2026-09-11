@@ -1,0 +1,204 @@
+@model TripCreateViewModel
+@{
+    ViewData["Title"] = "Edit Trip";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+    <style>
+        .edit-trip-theme {
+            --edit-ink: #18324f;
+            --edit-teal: #1d7185;
+            --edit-deep: #173c62;
+            --edit-sapphire: #2857a4;
+            --edit-gold: #d9a83e;
+            max-width: 980px;
+            padding: 2.5rem 2rem 3.5rem;
+            border-radius: 26px;
+            background:
+                radial-gradient(circle at 8% 8%, rgba(217, 168, 62, .24), transparent 28%),
+                radial-gradient(circle at 94% 12%, rgba(40, 87, 164, .24), transparent 30%),
+                linear-gradient(135deg, #e8efff, #f7f0ff) !important;
+            box-shadow: 0 18px 45px rgba(23, 50, 74, .08);
+        }
+
+        .edit-trip-theme h1 {
+            color: var(--edit-sapphire) !important;
+            letter-spacing: -.03em;
+        }
+
+        .edit-trip-theme h1 i {
+            color: var(--edit-sapphire) !important;
+        }
+
+        .edit-trip-theme .card {
+            border: 1px solid rgba(40, 87, 164, .18) !important;
+            border-top: 5px solid var(--edit-sapphire) !important;
+            border-radius: 22px;
+            background: linear-gradient(145deg, #ffffff, #eef3ff) !important;
+            box-shadow: 0 16px 35px rgba(23, 50, 74, .1) !important;
+        }
+
+        .edit-trip-theme .form-label {
+            color: var(--edit-deep) !important;
+            letter-spacing: .01em;
+        }
+
+        .edit-trip-theme .form-control,
+        .edit-trip-theme .form-select {
+            border: 1px solid #d6e5e3;
+            border-radius: 12px;
+            background: #ffffff !important;
+            color: var(--edit-ink);
+            transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+        }
+
+        .edit-trip-theme .form-control:focus,
+        .edit-trip-theme .form-select:focus {
+            border-color: var(--edit-sapphire) !important;
+            background: #fff !important;
+            box-shadow: 0 0 0 4px rgba(40, 87, 164, .18) !important;
+        }
+
+        .edit-trip-theme .btn-primary {
+            border-color: #2857a4 !important;
+            background: linear-gradient(135deg, #2857a4, #173c62) !important;
+            box-shadow: 0 9px 18px rgba(40, 87, 164, .28);
+        }
+
+        .edit-trip-theme .btn-primary:hover {
+            border-color: #123654 !important;
+            filter: brightness(.96);
+            box-shadow: 0 12px 22px rgba(40, 87, 164, .34);
+        }
+
+        .edit-trip-theme .btn-outline-secondary {
+            border-color: rgba(23, 50, 74, .2);
+            color: var(--edit-ink);
+        }
+
+        .edit-trip-theme .btn-outline-secondary:hover {
+            border-color: var(--edit-gold);
+            background: rgba(217, 168, 62, .13);
+            color: var(--edit-ink);
+        }
+
+        @@media (max-width: 575.98px) {
+            .edit-trip-theme {
+                padding: 1.5rem .75rem 2.5rem;
+                border-radius: 18px;
+            }
+        }
+    </style>
+
+    <div class="container edit-trip-theme">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold">
+                <i class="fas fa-edit me-2 text-primary"></i>Edit Trip
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow">
+                <div class="card-body p-4">
+                    <form method="post" asp-action="Edit">
+                        <input type="hidden" name="Id" value="@Model.Trip.Id" />
+                        <input type="hidden" name="UserId" value="@Model.Trip.UserId" />
+                        <input type="hidden" name="CreatedAt" value="@Model.Trip.CreatedAt" />
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="Title" class="form-label fw-bold">Trip Title</label>
+                                    <input type="text" class="form-control form-control-lg" id="Title" name="Title" value="@Model.Trip.Title" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="DestinationId" class="form-label fw-bold">Destination</label>
+                                    <select class="form-select form-select-lg" id="DestinationId" name="DestinationId" required>
+                                        <option value="">Select a destination...</option>
+                                        @foreach (var destination in Model.Destinations)
+                                        {
+                                            <option value="@destination.Id" selected="@(Model.Trip.DestinationId == destination.Id ? "selected" : null)">
+                                                @destination.Name, @destination.Country
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="TripType" class="form-label fw-bold">Trip Type</label>
+                                    <select class="form-select form-select-lg" id="TripType" name="TripType" required>
+                                        <option value="Solo" selected="@(Model.Trip.TripType == "Solo" ? "selected" : null)">Solo</option>
+                                        <option value="Family" selected="@(Model.Trip.TripType == "Family" ? "selected" : null)">Family</option>
+                                        <option value="Friends" selected="@(Model.Trip.TripType == "Friends" ? "selected" : null)">Friends</option>
+                                        <option value="Business" selected="@(Model.Trip.TripType == "Business" ? "selected" : null)">Business</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="Status" class="form-label fw-bold">Status</label>
+                                    <select class="form-select form-select-lg" id="Status" name="Status" required>
+                                        <option value="Planned" selected="@(Model.Trip.Status == "Planned" ? "selected" : null)">Planned</option>
+                                        <option value="Ongoing" selected="@(Model.Trip.Status == "Ongoing" ? "selected" : null)">Ongoing</option>
+                                        <option value="Completed" selected="@(Model.Trip.Status == "Completed" ? "selected" : null)">Completed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="StartDate" class="form-label fw-bold">Start Date</label>
+                                    <input type="date" class="form-control form-control-lg" id="StartDate" name="StartDate" value="@Model.Trip.StartDate.ToString("yyyy-MM-dd")" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="EndDate" class="form-label fw-bold">End Date</label>
+                                    <input type="date" class="form-control form-control-lg" id="EndDate" name="EndDate" value="@Model.Trip.EndDate.ToString("yyyy-MM-dd")" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="NumberOfTravelers" class="form-label fw-bold">Number of Travelers</label>
+                                    <input type="number" class="form-control form-control-lg" id="NumberOfTravelers" name="NumberOfTravelers" value="@Model.Trip.NumberOfTravelers" min="1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="BudgetLimit" class="form-label fw-bold">Budget Limit (BDT)</label>
+                                    <input type="number" class="form-control form-control-lg" id="BudgetLimit" name="BudgetLimit" value="@Model.Trip.BudgetLimit" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Description" class="form-label fw-bold">Description</label>
+                            <textarea class="form-control" id="Description" name="Description" rows="4">@Model.Trip.Description</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/trip/details/@Model.Trip.Id" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Update Trip
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

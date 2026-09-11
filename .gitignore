@@ -1,0 +1,47 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+.nuget/
+
+# Build results
+bin/
+obj/
+dist/
+build/
+
+# User-specific files
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+appsettings.Development.json
+
+# Database
+*.mdf
+*.ldf
+*.db
+
+# Temporary files
+temp/
+tmp/
+*.tmp
