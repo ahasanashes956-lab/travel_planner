@@ -39,14 +39,14 @@ namespace TravelPlanner.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var destinations = await _destinationRepository.GetAllDestinationsAsync();
+            var destinations = await _destinationRepository.GetPublishedDestinationsAsync();
             return View(destinations);
         }
 
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var destination = await _destinationRepository.GetDestinationByIdAsync(id);
+            var destination = await _destinationRepository.GetPublishedDestinationByIdAsync(id);
             if (destination == null)
                 return NotFound();
 
@@ -66,7 +66,7 @@ namespace TravelPlanner.Controllers
         [HttpGet("/api/destinations/catalog")]
         public async Task<IActionResult> Catalog()
         {
-            var destinations = await _destinationRepository.GetAllDestinationsAsync();
+            var destinations = await _destinationRepository.GetPublishedDestinationsAsync();
             return Ok(destinations.Select(destination => new
             {
                 id = destination.Id,

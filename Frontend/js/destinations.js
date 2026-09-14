@@ -8,16 +8,22 @@ const destinationImageFallbacks = {
     'new york': 'https://images.unsplash.com/photo-1496588152823-86ff7695e68f?q=80&w=1200&auto=format&fit=crop',
     paris: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1200&auto=format&fit=crop',
     'swiss alps': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200&auto=format&fit=crop',
-    tokyo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1200&auto=format&fit=crop'
+    tokyo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1200&auto=format&fit=crop',
+    sylhet: '/images/Sylhet-Scenic-Tour.jpg'
 };
+const localDestinationImageFallback = '/images/Sylhet-Scenic-Tour.jpg';
 
 function getDestinationImage(destination) {
+    if (destination.image && !String(destination.image).toLowerCase().includes('placeholder')) {
+        return destination.image;
+    }
+
     const fallback = destinationImageFallbacks[String(destination.name || '').trim().toLowerCase()];
-    return fallback || destination.image || '/images/travel-placeholder.svg';
+    return fallback || '/images/travel-placeholder.svg';
 }
 
 function getDestinationImageFallback(destination) {
-    return destinationImageFallbacks[String(destination.name || '').trim().toLowerCase()] || '/images/travel-placeholder.svg';
+    return destinationImageFallbacks[String(destination.name || '').trim().toLowerCase()] || localDestinationImageFallback;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -129,21 +135,18 @@ async function loadServerDestinations() {
         if (!response.ok) return;
 
         const serverDestinations = await response.json();
-        const existingKeys = new Set(destinations.map(destination => `${destination.name}|${destination.country}`.toLowerCase()));
-        serverDestinations.forEach(destination => {
-            const key = `${destination.name}|${destination.country}`.toLowerCase();
-            if (!existingKeys.has(key)) {
-                const hasIdCollision = destinations.some(existing => existing.id === destination.id);
-                destinations.push({
-                    ...destination,
-                    image: getDestinationImage({ ...destination, image: destination.imageUrl }),
-                    city: destination.region || destination.country || '',
-                    rating: destination.averageRating || 0,
-                    reviews: destination.reviewCount || 0,
-                    uiId: hasIdCollision ? `server-${destination.id}` : destination.id
-                });
-            }
-        });
+        const publishedDestinations = serverDestinations.map(destination => ({
+            ...destination,
+            image: getDestinationImage({ ...destination, image: destination.image }),
+            city: destination.city || destination.region || destination.country || '',
+            rating: destination.rating || destination.averageRating || 0,
+            reviews: destination.reviews || destination.reviewCount || 0,
+            uiId: destination.id
+        }));
+
+        // The server catalog is the source of truth. It already contains only
+        // destinations published by an administrator.
+        destinations.splice(0, destinations.length, ...publishedDestinations);
     } catch (error) {
         console.warn('Could not load database destinations:', error);
     }
@@ -198,7 +201,7 @@ function renderDashboardCards(list) {
         <div class="col-12 col-md-6 col-lg-4 mb-3">
             <div class="card h-100 border-0 shadow-sm d-flex flex-row align-items-center">
                 <div style="flex:0 0 110px; max-width:110px;">
-                    <img src="${getDestinationImage(dest)}" alt="${dest.name}" style="height:90px; width:110px; object-fit:cover; border-radius:8px;" onerror="this.onerror=null; this.src='${getDestinationImageFallback(dest)}';" />
+                    <img src="${getDestinationImage(dest)}" alt="${dest.name}" style="height:90px; width:110px; object-fit:cover; border-radius:8px;" onerror="this.onerror=null; this.src='${localDestinationImageFallback}';" />
                 </div>
                 <div class="p-3" style="flex:1;">
                     <div class="d-flex justify-content-between align-items-start">
@@ -233,7 +236,7 @@ function renderGrid(list) {
         <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm h-100 hover-card" onclick="showDestinationDetails('${dest.uiId ?? dest.id}')">
                 <div class="position-relative">
-                    <img src="${getDestinationImage(dest)}" class="card-img-top" style="height: 250px; object-fit: cover;" alt="${dest.name}" onerror="this.onerror=null; this.src='${getDestinationImageFallback(dest)}';" />
+                    <img src="${getDestinationImage(dest)}" class="card-img-top" style="height: 250px; object-fit: cover;" alt="${dest.name}" onerror="this.onerror=null; this.src='${localDestinationImageFallback}';" />
                     <div class="position-absolute top-0 start-0 bg-dark bg-opacity-50 text-white p-2 m-3 rounded">
                         <span class="badge bg-warning text-dark">${dest.rating} ⭐</span>
                     </div>

@@ -26,12 +26,14 @@ namespace TravelPlanner.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
         public DbSet<DestinationImage> DestinationImages { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Trip>().Property(t => t.BudgetLimit).HasPrecision(18, 2);
+            modelBuilder.Entity<Payment>().Property(payment => payment.Amount).HasPrecision(18, 2);
             modelBuilder.Entity<Accommodation>().Property(a => a.PricePerNight).HasPrecision(18, 2);
             modelBuilder.Entity<Accommodation>().Property(a => a.TotalCost).HasPrecision(18, 2);
             modelBuilder.Entity<Accommodation>().Property(a => a.HotelRating).HasPrecision(3, 2);
@@ -55,7 +57,6 @@ namespace TravelPlanner.Data
             modelBuilder.Entity<Destination>().Ignore(d => d.Longitude);
             modelBuilder.Entity<Destination>().Ignore(d => d.WeatherType);
             modelBuilder.Entity<Destination>().Ignore(d => d.ReviewCount);
-            modelBuilder.Entity<Destination>().Ignore(d => d.IsPopular);
 
             // Configure Trip relationships
             modelBuilder.Entity<Trip>()
@@ -179,6 +180,18 @@ namespace TravelPlanner.Data
                 .HasOne(di => di.Destination)
                 .WithMany(d => d.Images)
                 .HasForeignKey(di => di.DestinationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(payment => payment.User)
+                .WithMany()
+                .HasForeignKey(payment => payment.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(payment => payment.Trip)
+                .WithMany()
+                .HasForeignKey(payment => payment.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

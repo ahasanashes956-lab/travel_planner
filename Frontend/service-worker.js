@@ -1,4 +1,4 @@
-const CACHE_NAME = 'travel-planner-bd-v24';
+const CACHE_NAME = 'travel-planner-bd-v25';
 const ASSETS = [
   '/',
   '/index.html',
@@ -20,7 +20,7 @@ const ASSETS = [
   '/js/auth.js?v=20260909-notification-flow',
   '/js/dashboard.js?v=20260908-reminders',
   '/js/destinations.js?v=20260911-destination-id-fix',
-  '/js/trips.js?v=20260908-reminders-delete',
+  '/js/trips.js?v=20260912-expense-payment-fix',
   '/js/profile.js'
   ,'/js/trip-form.js?v=20260911-plan-trip-single'
 ];

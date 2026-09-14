@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TravelPlanner.Data;
 using TravelPlanner.Models;
 using TravelPlanner.Models.ViewModels;
 using TravelPlanner.Repositories;
@@ -16,17 +18,20 @@ namespace TravelPlanner.Controllers
         private readonly ITripRepository _tripRepository;
         private readonly IDestinationRepository _destinationRepository;
         private readonly IExpenseRepository _expenseRepository;
+        private readonly ApplicationDbContext _context;
 
         public TripController(
             UserManager<ApplicationUser> userManager,
             ITripRepository tripRepository,
             IDestinationRepository destinationRepository,
-            IExpenseRepository expenseRepository)
+            IExpenseRepository expenseRepository,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _tripRepository = tripRepository;
             _destinationRepository = destinationRepository;
             _expenseRepository = expenseRepository;
+            _context = context;
         }
 
         [HttpGet]
@@ -85,6 +90,24 @@ namespace TravelPlanner.Controllers
                 return Unauthorized(new { message = "Please log in first" });
 
             var trips = await _tripRepository.GetUserTripsAsync(user.Id);
+            var completedTrips = trips
+                .Where(trip => trip.EndDate.Date < DateTime.Today &&
+                    trip.Status != "Completed" && trip.Status != "Ended")
+                .ToList();
+
+            foreach (var trip in completedTrips)
+            {
+                trip.Status = "Completed";
+                trip.UpdatedAt = DateTime.UtcNow;
+            }
+
+            if (completedTrips.Count > 0)
+                await _context.SaveChangesAsync();
+
+            var reviews = await _context.Reviews
+                .Where(review => review.UserId == user.Id && review.TripId.HasValue)
+                .ToDictionaryAsync(review => review.TripId!.Value);
+
             return Ok(trips.Select(trip => new
             {
                 id = trip.Id,
@@ -105,8 +128,61 @@ namespace TravelPlanner.Controllers
                 numberOfTravelers = trip.NumberOfTravelers,
                 budgetLimit = trip.BudgetLimit,
                 totalSpent = trip.TotalSpent,
-                createdAt = trip.CreatedAt
+                createdAt = trip.CreatedAt,
+                review = reviews.TryGetValue(trip.Id, out var review) ? new
+                {
+                    rating = review.Rating,
+                    content = review.Content
+                } : null
             }));
+        }
+
+        [Authorize]
+        [HttpPost("/api/trips/{tripId:int}/review")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> SubmitTripReviewApi(int tripId, [FromBody] TripReviewApiViewModel model)
+        {
+            if (model == null || model.Rating < 1 || model.Rating > 5)
+                return BadRequest(new { message = "Please choose a rating from 1 to 5 stars." });
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized(new { message = "Please log in first" });
+
+            var trip = await _context.Trips
+                .SingleOrDefaultAsync(existingTrip => existingTrip.Id == tripId && existingTrip.UserId == user.Id);
+
+            if (trip == null)
+                return NotFound(new { message = "Trip not found" });
+
+            if (trip.EndDate.Date < DateTime.Today && trip.Status != "Completed" && trip.Status != "Ended")
+            {
+                trip.Status = "Completed";
+                trip.UpdatedAt = DateTime.UtcNow;
+            }
+
+            if (trip.Status != "Completed" && trip.Status != "Ended")
+                return BadRequest(new { message = "Reviews are available after the trip is completed." });
+
+            var alreadyReviewed = await _context.Reviews
+                .AnyAsync(review => review.TripId == tripId && review.UserId == user.Id);
+            if (alreadyReviewed)
+                return Conflict(new { message = "You have already reviewed this trip." });
+
+            _context.Reviews.Add(new Review
+            {
+                TripId = trip.Id,
+                DestinationId = trip.DestinationId,
+                UserId = user.Id,
+                Rating = model.Rating,
+                Content = string.IsNullOrWhiteSpace(model.Content) ? null : model.Content.Trim(),
+                Title = "Trip review",
+                CreatedAt = DateTime.UtcNow,
+                IsApproved = false
+            });
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Thanks for reviewing your trip!" });
         }
 
         [Authorize]
@@ -209,6 +285,21 @@ namespace TravelPlanner.Controllers
 
             if (trip.UserId != user.Id && !User.IsInRole("Admin"))
                 return Forbid();
+
+            var expensePayment = await _context.Payments.FirstOrDefaultAsync(payment =>
+                payment.Id == model.PaymentId && payment.TripId == trip.Id && payment.UserId == user.Id &&
+                payment.Status == "Paid" && Math.Abs(payment.Amount - model.Amount) < 0.01m);
+
+            // Keep the expense flow resilient if the browser submits a stale payment id
+            // after the mock payment has already completed.
+            expensePayment ??= await _context.Payments
+                .Where(payment => payment.TripId == trip.Id && payment.UserId == user.Id &&
+                    payment.Status == "Paid" && Math.Abs(payment.Amount - model.Amount) < 0.01m)
+                .OrderByDescending(payment => payment.PaidAt ?? payment.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (expensePayment == null)
+                return BadRequest(new { message = "Please complete a payment for the exact expense amount before saving it." });
 
             var expense = new Expense
             {
@@ -377,9 +468,16 @@ namespace TravelPlanner.Controllers
         public decimal BudgetLimit { get; set; }
     }
 
+    public class TripReviewApiViewModel
+    {
+        public int Rating { get; set; }
+        public string? Content { get; set; }
+    }
+
     public class AddExpenseApiViewModel
     {
         public string? Name { get; set; }
         public decimal Amount { get; set; }
+        public int PaymentId { get; set; }
     }
 }

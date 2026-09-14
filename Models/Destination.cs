@@ -39,8 +39,9 @@ namespace TravelPlanner.Models
         [NotMapped]
         public int ReviewCount { get; set; } = 0;
 
-        [NotMapped]
         public bool IsPopular { get; set; } = false;
+
+        public bool IsPublished { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

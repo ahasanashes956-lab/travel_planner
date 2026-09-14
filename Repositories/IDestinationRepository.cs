@@ -8,7 +8,9 @@ namespace TravelPlanner.Repositories
     public interface IDestinationRepository
     {
         Task<IEnumerable<Destination>> GetAllDestinationsAsync();
+        Task<IEnumerable<Destination>> GetPublishedDestinationsAsync();
         Task<Destination> GetDestinationByIdAsync(int id);
+        Task<Destination?> GetPublishedDestinationByIdAsync(int id);
         Task<Destination?> GetDestinationSummaryByIdAsync(int id);
         Task<IEnumerable<Destination>> GetDestinationSummariesAsync();
         Task<IEnumerable<Destination>> SearchDestinationsAsync(string query);

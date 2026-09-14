@@ -12,11 +12,11 @@ function initAdmin() {
 			.then(response => response.ok ? response.json() : null)
 			.then(user => {
 				if (!user?.isAuthenticated) {
-					window.location.href = 'login.html';
+					window.location.href = 'login.html?returnUrl=%2Fadmin.html';
 					return;
 				}
 				if (!Array.isArray(user.roles) || !user.roles.includes('Admin')) {
-					document.body.innerHTML = '<main class="container py-5"><div class="alert alert-danger">Admin access required.</div></main>';
+					document.body.innerHTML = '<main class="container py-5"><div class="alert alert-warning"><strong>Admin session required.</strong><p class="mb-3">This browser is currently signed in as a regular user. Sign in with the admin account to open the admin dashboard.</p><a class="btn btn-primary" href="login.html?returnUrl=%2Fadmin.html">Go to Admin Login</a></div></main>';
 					return;
 				}
 				showAdminPanel();
@@ -133,8 +133,12 @@ async function loadAdminData() {
 
 		const users = await usersResponse.json();
 		const destinations = await destinationsResponse.json();
+		const paymentsResponse = await fetch('/api/admin/payments', { credentials: 'include', cache: 'no-store' });
+		if (!paymentsResponse.ok) throw new Error('Payment data could not be loaded.');
+		const payments = await paymentsResponse.json();
 		renderAdminUsers(users);
 		renderAdminDestinations(destinations);
+		renderAdminPayments(payments);
 		document.getElementById('totalUsers').textContent = users.length;
 		document.getElementById('pendingUsers').textContent = users.filter(user => user.status === 'Pending').length;
 		document.getElementById('approvedUsers').textContent = users.filter(user => user.status === 'Approved').length;
@@ -144,6 +148,23 @@ async function loadAdminData() {
 		console.error('Admin data error:', error);
 		showNotification(error.message, 'danger');
 	}
+}
+
+function renderAdminPayments(payments) {
+	const container = document.getElementById('adminPaymentList');
+	const count = document.getElementById('paymentRefresh');
+	if (!container) return;
+	if (!payments.length) {
+		container.innerHTML = '<div class="user-meta">No payments yet.</div>';
+		if (count) count.textContent = '0 payments';
+		return;
+	}
+
+	if (count) count.textContent = `${payments.length} payments`;
+	container.innerHTML = payments.map(payment => {
+		const statusClass = payment.status === 'Paid' ? 'approved' : payment.status === 'Pending' ? 'pending' : 'rejected';
+		return `<div class="user-row payment-row"><div class="payment-copy"><strong><i class="fas fa-receipt"></i>${escapeAdminText(payment.tripTitle || 'Trip payment')}</strong><span class="user-meta">${escapeAdminText(payment.userName || payment.email || 'Unknown user')} · ${escapeAdminText(payment.destination || '')}</span><span class="user-meta payment-reference"><i class="fas fa-hashtag"></i>${escapeAdminText(payment.transactionId)} · ${escapeAdminText(payment.paymentMethod)}</span></div><div class="user-actions payment-actions"><strong class="payment-amount">${escapeAdminText(payment.currency)} ${Number(payment.amount || 0).toLocaleString()}</strong><span class="status-pill ${statusClass}">${escapeAdminText(payment.status)}</span></div></div>`;
+	}).join('');
 }
 
 function renderAdminUsers(users) {
@@ -172,13 +193,38 @@ function renderAdminUsers(users) {
 function renderAdminDestinations(items) {
 	const container = document.getElementById('adminDestList');
 	if (!container) return;
-	container.innerHTML = items.map(destination => `
-		<div class="destination-row" data-destination-id="${destination.id}"><img class="destination-thumb" src="${escapeAdminAttribute(destination.imageUrl || '/images/travel-placeholder.svg')}" alt="${escapeAdminAttribute(destination.name || 'Destination')}" onerror="this.onerror=null;this.src='/images/travel-placeholder.svg';"><div class="destination-copy"><strong>${escapeAdminText(destination.name)}</strong><div>${escapeAdminText(destination.country || '')} · ${escapeAdminText(destination.category || 'Uncategorised')}</div></div><div class="destination-actions"><span class="status-pill approved">Published</span><button class="btn btn-sm btn-delete-destination" data-delete-destination="${destination.id}" title="Delete destination"><i class="fas fa-trash-can"></i></button></div></div>
-	`).join('');
+	container.innerHTML = items.map(destination => {
+		const imageUrl = destination.imageUrl && !destination.imageUrl.toLowerCase().includes('placeholder')
+			? destination.imageUrl
+			: '/images/Sylhet-Scenic-Tour.jpg';
+		return `
+		<div class="destination-row" data-destination-id="${destination.id}"><img class="destination-thumb" src="${escapeAdminAttribute(imageUrl)}" alt="${escapeAdminAttribute(destination.name || 'Destination')}" onerror="this.onerror=null;this.src='/images/Sylhet-Scenic-Tour.jpg';"><div class="destination-copy"><strong>${escapeAdminText(destination.name)}</strong><div>${escapeAdminText(destination.country || '')} · ${escapeAdminText(destination.category || 'Uncategorised')}</div></div><div class="destination-actions"><span class="status-pill ${destination.isPublished ? 'approved' : 'rejected'}">${destination.isPublished ? 'Published' : 'Unpublished'}</span><button class="btn btn-sm btn-outline-success btn-publish-destination" data-publish-destination="${destination.id}" data-published="${destination.isPublished}" title="${destination.isPublished ? 'Unpublish destination' : 'Publish destination'}"><i class="fas ${destination.isPublished ? 'fa-eye-slash' : 'fa-eye'}"></i></button><button class="btn btn-sm btn-delete-destination" data-delete-destination="${destination.id}" title="Delete destination"><i class="fas fa-trash-can"></i></button></div></div>
+		`;
+	}).join('');
 
 	container.querySelectorAll('[data-delete-destination]').forEach(button => {
 		button.addEventListener('click', () => deleteAdminDestination(button.dataset.deleteDestination, button));
 	});
+	container.querySelectorAll('[data-publish-destination]').forEach(button => {
+		button.addEventListener('click', () => toggleDestinationPublished(button.dataset.publishDestination, button.dataset.published !== 'true'));
+	});
+}
+
+async function toggleDestinationPublished(id, isPublished) {
+	try {
+		const response = await fetch(`/api/admin/destinations/${id}/publish`, {
+			method: 'POST',
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ isPublished })
+		});
+		const data = await response.json().catch(() => ({}));
+		if (!response.ok) throw new Error(data.message || 'Could not update destination publication.');
+		showNotification(data.message, 'success');
+		await loadAdminData();
+	} catch (error) {
+		showNotification(error.message, 'danger');
+	}
 }
 
 async function deleteAdminDestination(id, button) {

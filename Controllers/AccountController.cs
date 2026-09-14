@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using TravelPlanner.Models;
 using TravelPlanner.Services;
 
@@ -478,6 +479,33 @@ namespace TravelPlanner.Controllers
             });
         }
 
+        [HttpPost("/api/change-password")]
+        [Authorize]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> ChangePasswordApi([FromBody] ChangePasswordApiViewModel model)
+        {
+            if (model == null || string.IsNullOrWhiteSpace(model.CurrentPassword) ||
+                string.IsNullOrWhiteSpace(model.NewPassword) || string.IsNullOrWhiteSpace(model.ConfirmPassword))
+                return BadRequest(new { message = "Current password, new password, and confirmation are required" });
+
+            if (model.NewPassword != model.ConfirmPassword)
+                return BadRequest(new { message = "Passwords do not match" });
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized(new { message = "Please log in again" });
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errorMessages = string.Join(" ", result.Errors.Select(error => error.Description));
+                return BadRequest(new { message = errorMessages });
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            return Ok(new { message = "Password changed successfully" });
+        }
+
         [HttpPost("/api/reset-password")]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ResetPasswordApi([FromBody] ResetPasswordApiViewModel model)
@@ -551,6 +579,13 @@ namespace TravelPlanner.Controllers
     {
         public string? Email { get; set; }
         public string? Token { get; set; }
+        public string? NewPassword { get; set; }
+        public string? ConfirmPassword { get; set; }
+    }
+
+    public class ChangePasswordApiViewModel
+    {
+        public string? CurrentPassword { get; set; }
         public string? NewPassword { get; set; }
         public string? ConfirmPassword { get; set; }
     }

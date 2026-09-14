@@ -122,3 +122,56 @@ document.getElementById('profileForm')?.addEventListener('submit', async functio
         showNotification('Profile update error: ' + error.message, 'error');
     }
 });
+
+document.getElementById('changePasswordForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const message = document.getElementById('changePasswordMessage');
+    const submitButton = document.getElementById('changePasswordSubmit');
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+    message.hidden = false;
+    message.className = 'alert alert-danger mb-3';
+
+    if (newPassword !== confirmPassword) {
+        message.textContent = 'Passwords do not match.';
+        return;
+    }
+
+    if (newPassword.length < 10 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) ||
+        !/[0-9]/.test(newPassword) || !/[^a-zA-Z0-9]/.test(newPassword)) {
+        message.textContent = 'New password must be at least 10 characters and include uppercase, lowercase, a number, and a special character.';
+        return;
+    }
+
+    submitButton.disabled = true;
+    submitButton.textContent = 'Updating...';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/change-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            message.textContent = data.message || 'Password change failed.';
+            return;
+        }
+
+        message.className = 'alert alert-success mb-3';
+        message.textContent = data.message;
+        document.getElementById('changePasswordForm').reset();
+        setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'))?.hide(), 900);
+    } catch (error) {
+        message.textContent = 'Could not change password. Please try again.';
+        console.error('Password change error:', error);
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Update Password';
+    }
+});
