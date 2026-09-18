@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Travel destination">
+  <rect width="800" height="500" fill="#e9f2f0"/>
+  <path d="M0 380 180 230 300 330 430 190 800 500H0Z" fill="#9bc9c0"/>
+  <circle cx="620" cy="120" r="58" fill="#f4bd63"/>
+  <path d="M0 420 210 300 350 390 500 280 800 500H0Z" fill="#4d8b83" opacity=".8"/>
+</svg>
