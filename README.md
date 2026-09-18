@@ -1,134 +1,246 @@
-# Smart Travel Planner
+# Smart Travel Planner - ASP.NET Core MVC
 
-Smart Travel Planner is a full-stack travel planning application for creating trips, exploring destinations, organizing itineraries, and tracking travel expenses in one place.
+A beautiful, responsive, and feature-rich travel planning application built with **ASP.NET Core MVC**, **SQL Server**, **Entity Framework Core**, and **Bootstrap 5**.
 
-Repository: https://github.com/elahimahi/travel_planner
+## 🌟 Features
 
-## Project Goal
+### Authentication & Security
+- ✅ User Registration with email verification
+- ✅ Secure Login/Logout with session management
+- ✅ Forgot Password & Password Reset functionality
+- ✅ Role-based Authorization (Admin & User)
+- ✅ Secure password hashing with Identity
+- ✅ Profile Management
 
-- Make travel planning simple, organized, and easy to manage.
-- Help users manage destinations, schedules, budgets, bookings, and activities.
-- Give administrators tools to manage users and destination content.
+### Trip Management
+- ✅ Create, Read, Update, Delete (CRUD) trips
+- ✅ Select destinations from catalog
+- ✅ Set travel dates and number of travelers
+- ✅ Choose trip types (Solo, Family, Friends, Business)
+- ✅ Update trip status (Planned, Ongoing, Completed)
 
-## Key Features
+### Dashboard
+- ✅ Upcoming trips overview
+- ✅ Recent trips history
+- ✅ Trip statistics and analytics
+- ✅ Quick action buttons
+- ✅ Budget summary
 
-### User Features
+### Destination Explorer
+- ✅ Browse all destinations
+- ✅ Search destinations by name, city, or country
+- ✅ View destination details with attractions
+- ✅ Image gallery
+- ✅ Tourist ratings and reviews
+- ✅ Add to favorites
 
-- Registration, login, logout, email confirmation, and password reset.
-- Profile management with profile photo upload.
-- Create, update, view, and delete trips.
-- Select destinations, dates, trip type, travelers, and trip status.
-- Build day-by-day itineraries and manage activities.
-- Track budgets and add categorized expenses.
-- Manage accommodation and transportation details.
-- Browse destinations, attractions, images, reviews, and favorites.
-- Packing checklist, weather information, and responsive design.
+### Itinerary Management
+- ✅ Day-wise schedule planning
+- ✅ Activity management with time slots
+- ✅ Personal notes for each day
+- ✅ Activity categories
 
-### Admin Features
+### Budget & Expense Management
+- ✅ Set trip budgets
+- ✅ Track daily expenses
+- ✅ Categorize expenses (Food, Transport, Accommodation, etc.)
+- ✅ Budget progress visualization
+- ✅ Expense reports and analytics
 
-- Role-based access control for Admin and User roles.
-- Manage users and account status.
-- Add, edit, publish, and manage destinations.
-- Review application data through admin dashboards.
+### Accommodation
+- ✅ Add hotel bookings
+- ✅ Hotel details and ratings
+- ✅ Check-in/Check-out date management
+- ✅ Hotel cost tracking
 
-## Technology Stack
+### Transportation
+- ✅ Flight, train, and bus information
+- ✅ Transportation provider details
+- ✅ Ticket number tracking
+- ✅ Cost management
 
-- **Backend:** ASP.NET Core MVC on .NET 10
-- **Language:** C#
-- **Database:** SQL Server
-- **ORM:** Entity Framework Core
-- **Authentication:** ASP.NET Core Identity with cookie authentication
-- **Frontend:** HTML, CSS, JavaScript, and Bootstrap 5
-- **Email:** MailKit and MimeKit
-- **Charts:** Chart.js
+### Additional Features
+- ✅ Packing checklist
+- ✅ Weather information
+- ✅ Review system for destinations
+- ✅ Favorites/Saved items
+- ✅ Responsive design for mobile devices
+- ✅ Beautiful modern UI with Bootstrap 5
 
-## Project Structure
+## 🛠️ Technology Stack
 
-```text
-Travel/
-├── Controllers/       API and MVC controllers
-├── Data/              Entity Framework database context
-├── Frontend/          Static HTML, CSS, and JavaScript frontend
-├── Models/            Application and view models
-├── Repositories/      Data access repositories
-├── Services/          Email, chat, and database seeding services
-├── Views/             Razor MVC views
-├── wwwroot/           Public assets and uploaded files
-├── Program.cs         Application configuration and startup
-└── appsettings.json   Application and database configuration
+- **Backend**: ASP.NET Core MVC (.NET 8)
+- **Language**: C#
+- **Database**: SQL Server
+- **ORM**: Entity Framework Core
+- **Frontend**: HTML5, CSS3, Bootstrap 5, JavaScript
+- **Authentication**: ASP.NET Core Identity
+- **Email**: MailKit
+- **Charts**: Chart.js
+
+## 📋 Project Structure
+
+```
+TravelPlanner/
+├── Models/                    # Data models
+│   ├── ApplicationUser.cs
+│   ├── Trip.cs
+│   ├── Destination.cs
+│   ├── Itinerary.cs
+│   ├── Activity.cs
+│   ├── Accommodation.cs
+│   ├── Transportation.cs
+│   ├── Expense.cs
+│   ├── PackingItem.cs
+│   ├── Attraction.cs
+│   ├── Review.cs
+│   ├── Favorite.cs
+│   └── DestinationImage.cs
+├── Controllers/               # MVC Controllers
+│   ├── AccountController.cs
+│   ├── DashboardController.cs
+│   ├── TripController.cs
+│   ├── DestinationController.cs
+│   └── HomeController.cs
+├── Views/                     # Razor views
+│   ├── Shared/
+│   ├── Home/
+│   ├── Account/
+│   ├── Dashboard/
+│   ├── Trip/
+│   └── Destination/
+├── Data/                      # Database context
+│   └── ApplicationDbContext.cs
+├── Services/                  # Business logic
+│   ├── EmailService.cs
+│   └── DatabaseSeeder.cs
+├── Repositories/              # Data access layer
+│   ├── ITripRepository.cs
+│   ├── TripRepository.cs
+│   ├── IDestinationRepository.cs
+│   └── DestinationRepository.cs
+├── wwwroot/                   # Static files
+│   ├── css/
+│   ├── js/
+│   └── images/
+└── Program.cs                 # Application entry point
 ```
 
-## Requirements
+## 🚀 Getting Started
 
-- .NET 10 SDK
-- SQL Server, SQL Server Express, or LocalDB
-- Visual Studio 2022 or Visual Studio Code
-- Git
+### Prerequisites
+- .NET 8 SDK
+- SQL Server (LocalDB or Express)
+- Visual Studio 2022 or VS Code
 
-## Setup and Run
+### Installation
 
-1. Clone the repository:
-
-```powershell
-git clone https://github.com/elahimahi/travel_planner.git
-cd travel_planner
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd Travel
 ```
 
-2. Configure `ConnectionStrings:DefaultConnection` in `appsettings.json`.
-
-3. Restore packages and build the application:
-
-```powershell
-dotnet restore
-dotnet build .\TravelPlanner.csproj
+2. **Update Database Connection**
+Edit `appsettings.json` and update the connection string:
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=TravelPlannerDb;Trusted_Connection=true;Encrypt=false"
+}
 ```
 
-4. Start the application:
-
-```powershell
-dotnet run --project .\TravelPlanner.csproj
+3. **Configure Email Settings**
+Update email settings in `appsettings.json`:
+```json
+"EmailSettings": {
+  "SmtpServer": "smtp.gmail.com",
+  "Port": 587,
+  "SenderEmail": "your-email@gmail.com",
+  "SenderPassword": "your-app-password"
+}
 ```
 
-5. Open the application at:
-
-```text
-http://localhost:8000
+4. **Create Database**
+Open Package Manager Console and run:
+```bash
+Add-Migration InitialCreate
+Update-Database
 ```
 
-The application creates or updates required database objects during startup and seeds initial data when the database is configured correctly.
+5. **Run the Application**
+```bash
+dotnet run
+```
 
-## Configuration
+The application will be available at `https://localhost:5001`
 
-- Set `ConnectionStrings:DefaultConnection` for your SQL Server instance.
-- Configure `EmailSettings` for email confirmation and password reset emails.
-- Keep passwords, API keys, and other secrets out of source control.
+## 📝 Usage
 
-## API Overview
+### For Users
+1. **Register** a new account
+2. **Verify** your email
+3. **Login** to your account
+4. **Create a trip** and select destination
+5. **Manage itinerary** and expenses
+6. **Track budget** and plan activities
+7. **View dashboard** for trip overview
 
-The frontend communicates with same-origin API routes, including:
+### For Admins
+- Manage destinations
+- Manage users
+- Approve reviews
+- View analytics
+- Generate reports
 
-- `/api/register` and `/api/login` for authentication.
-- `/api/current-user` and `/api/profile` for user profiles.
-- `/api/trips` for trip and expense management.
-- `/api/destinations` for destination data.
-- `/api/admin/*` for administrator operations.
+## 🎨 Design Features
 
-## Security
+- **Modern Color Scheme**: Purple gradient theme with Bootstrap 5
+- **Responsive Layout**: Works perfectly on desktop, tablet, and mobile
+- **Smooth Animations**: Subtle transitions and hover effects
+- **Professional UI**: Clean, intuitive interface with great UX
+- **Custom CSS**: Beautiful gradients, shadows, and effects
+- **Mobile-First**: Optimized for all screen sizes
 
-- ASP.NET Core Identity password hashing.
-- Cookie-based authentication and role authorization.
-- CSRF protection for applicable requests.
-- Entity Framework Core parameterized database queries.
-- Input validation and protected admin endpoints.
+## 🔐 Security Features
 
-## Contributing
+- Password hashing with ASP.NET Identity
+- Email verification
+- Role-based authorization
+- CSRF protection
+- SQL injection prevention with Entity Framework Core
+- Secure session management
+- Input validation
 
-1. Fork the repository.
-2. Create a feature branch.
-3. Make focused changes and test locally.
-4. Commit and push your changes.
-5. Open a pull request with a clear description.
+## 📊 Database Schema
 
-## License
+The database uses proper relationships:
+- **One-to-Many**: User → Trips, Trip → Expenses
+- **Many-to-One**: Trip → Destination
+- **Cascade Deletes**: Automatic cleanup of related data
+- **Proper Indexing**: Optimized for performance
 
-No license file is currently included in this repository. Add a license before distributing the project publicly.
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📞 Support
+
+For support, email: support@travelplanner.com
+Or visit: www.travelplanner.com
+
+## 👨‍💻 Developer
+
+Built with ❤️ by Travel Planner Team
+
+---
+
+**Happy Travels! 🌍✈️**

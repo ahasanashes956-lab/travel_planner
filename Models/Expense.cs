@@ -4,8 +4,7 @@ namespace TravelPlanner.Models
 {
     /// <summary>
     /// Expense model for budget tracking.
-    /// The database schema currently uses older column names, so we map the
-    /// model properties to that schema instead of assuming the newer fields exist.
+    /// The model maps to the existing Expenses table schema.
     /// </summary>
     public class Expense
     {
@@ -15,13 +14,12 @@ namespace TravelPlanner.Models
         [NotMapped]
         public string? Category { get; set; }
 
-        [Column("Name")]
         public string? Description { get; set; }
 
         public decimal Amount { get; set; }
+        [NotMapped]
         public string? Currency { get; set; } = "BDT";
 
-        [Column("IncurredAt")]
         public DateTime ExpenseDate { get; set; }
 
         [NotMapped]

@@ -41,9 +41,6 @@ appsettings.Development.json
 *.ldf
 *.db
 
-# User uploads
-wwwroot/uploads/
-
 # Temporary files
 temp/
 tmp/

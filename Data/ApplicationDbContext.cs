@@ -26,14 +26,12 @@ namespace TravelPlanner.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
         public DbSet<DestinationImage> DestinationImages { get; set; }
-        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Trip>().Property(t => t.BudgetLimit).HasPrecision(18, 2);
-            modelBuilder.Entity<Payment>().Property(payment => payment.Amount).HasPrecision(18, 2);
             modelBuilder.Entity<Accommodation>().Property(a => a.PricePerNight).HasPrecision(18, 2);
             modelBuilder.Entity<Accommodation>().Property(a => a.TotalCost).HasPrecision(18, 2);
             modelBuilder.Entity<Accommodation>().Property(a => a.HotelRating).HasPrecision(3, 2);
@@ -99,23 +97,12 @@ namespace TravelPlanner.Data
                 .HasForeignKey(t => t.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configure Expense relationships and legacy mapped columns.
+            // Configure Expense relationships and fields not present in the current table.
             modelBuilder.Entity<Expense>()
                 .HasOne(e => e.Trip)
                 .WithMany(t => t.Expenses)
                 .HasForeignKey(e => e.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Expense>()
-                .Property(e => e.Description)
-                .HasColumnName("Name");
-
-            modelBuilder.Entity<Expense>()
-                .Property(e => e.ExpenseDate)
-                .HasColumnName("IncurredAt");
-
-            modelBuilder.Entity<Expense>()
-                .Ignore(e => e.Category);
 
             modelBuilder.Entity<Expense>()
                 .Ignore(e => e.PaymentMethod);
@@ -180,18 +167,6 @@ namespace TravelPlanner.Data
                 .HasOne(di => di.Destination)
                 .WithMany(d => d.Images)
                 .HasForeignKey(di => di.DestinationId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(payment => payment.User)
-                .WithMany()
-                .HasForeignKey(payment => payment.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(payment => payment.Trip)
-                .WithMany()
-                .HasForeignKey(payment => payment.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

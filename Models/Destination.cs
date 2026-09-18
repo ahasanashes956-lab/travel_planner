@@ -41,8 +41,6 @@ namespace TravelPlanner.Models
 
         public bool IsPopular { get; set; } = false;
 
-        public bool IsPublished { get; set; } = true;
-
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public virtual ICollection<Trip>? Trips { get; set; }

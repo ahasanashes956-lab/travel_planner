@@ -534,7 +534,7 @@ body {
 }
 
 .badge.bg-primary,
-.status-pill.supported { background: var(--atlas-teal) !important; color: #fff !important; }
+.status-pill.supported { background: var(--atlas-teal) !important; }
 .badge.bg-warning { background: var(--atlas-gold) !important; color: var(--atlas-ink) !important; }
 .badge.bg-danger { background: var(--atlas-coral) !important; }
 
