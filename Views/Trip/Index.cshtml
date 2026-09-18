@@ -1,0 +1,95 @@
+@model List<Trip>
+@{
+    ViewData["Title"] = "My Trips";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="fw-bold">
+                    <i class="fas fa-suitcase me-2 text-primary"></i>My Trips
+                </h1>
+                <a href="/trip/create" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create New Trip
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Count > 0)
+    {
+        <div class="row g-4">
+            @foreach (var trip in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100 hover-card">
+                        @if (!string.IsNullOrEmpty(trip.CoverImageUrl))
+                        {
+                            <img src="@trip.CoverImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;" alt="@trip.Title" />
+                        }
+                        else
+                        {
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                            </div>
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">@trip.Title</h5>
+                            <p class="card-text text-muted small">@trip.Destination?.Name</p>
+
+                            <div class="mb-3">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    @trip.StartDate.ToString("MMM dd") - @trip.EndDate.ToString("MMM dd, yyyy")
+                                </small>
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-users me-1"></i>
+                                    @trip.NumberOfTravelers Travelers
+                                </small>
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="badge bg-info">@trip.TripType</span>
+                                @if (trip.Status == "Planned")
+                                {
+                                    <span class="badge bg-warning">Planned</span>
+                                }
+                                else if (trip.Status == "Ongoing")
+                                {
+                                    <span class="badge bg-success">Ongoing</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Completed</span>
+                                }
+                            </div>
+
+                            <div class="progress mb-3" style="height: 20px;">
+                                <div class="progress-bar" role="progressbar" style="width: @((trip.TotalSpent / trip.BudgetLimit * 100).ToString("F0"))%">
+                                    @((trip.TotalSpent / trip.BudgetLimit * 100).ToString("F0"))%
+                                </div>
+                            </div>
+                            <small class="text-muted">Budget: $@trip.BudgetLimit.ToString("F2") | Spent: $@trip.TotalSpent.ToString("F2")</small>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="/trip/details/@trip.Id" class="btn btn-sm btn-outline-primary">View Details</a>
+                                <a href="/trip/edit/@trip.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center py-5">
+            <i class="fas fa-info-circle fa-3x mb-3 d-block"></i>
+            <h5>No trips yet!</h5>
+            <p class="mb-3">Start planning your first adventure today.</p>
+            <a href="/trip/create" class="btn btn-primary">Create Your First Trip</a>
+        </div>
+    }
+</div>

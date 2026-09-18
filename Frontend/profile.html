@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Travel Planner</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=20260909-notification-ui">
+    <link rel="stylesheet" href="css/ui-polish.css?v=20260908-ui">
+</head>
+<body class="profile-page">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/index.html">
+                <i class="fas fa-map-marker-alt text-success me-2"></i>Travel Planner BD
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/destinations.html">Destinations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/trips.html">My Trips</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/profile.html">Profile</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="fw-bold">
+                    <i class="fas fa-user-circle me-2 text-primary"></i>My Profile
+                </h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow">
+                    <div class="card-body p-4">
+                        <form id="profileForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="firstName" class="form-label fw-bold">First Name</label>
+                                        <input type="text" class="form-control" id="firstName" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="lastName" class="form-label fw-bold">Last Name</label>
+                                        <input type="text" class="form-control" id="lastName" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-bold">Email Address</label>
+                                <input type="email" class="form-control" id="email" disabled>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label fw-bold">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="city" class="form-label fw-bold">City</label>
+                                        <input type="text" class="form-control" id="city">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="country" class="form-label fw-bold">Country</label>
+                                        <input type="text" class="form-control" id="country">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label fw-bold">Address</label>
+                                <input type="text" class="form-control" id="address">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="bio" class="form-label fw-bold">Bio</label>
+                                <textarea class="form-control" id="bio" rows="4"></textarea>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="dashboard.html" class="btn btn-outline-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Profile Summary -->
+                <div class="card border-0 shadow mb-4">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img id="profilePhoto" class="rounded-circle d-none" width="96" height="96" alt="Profile photo">
+                            <i id="profilePhotoPlaceholder" class="fas fa-user-circle fa-5x text-primary"></i>
+                        </div>
+                        <form id="profilePhotoForm" class="mb-3">
+                            <label for="profilePhotoInput" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-camera me-1"></i>Upload Photo
+                            </label>
+                            <input id="profilePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+                        </form>
+                        <h5 class="card-title fw-bold" id="profileName">User</h5>
+                        <p class="card-text text-muted" id="profileEmail">user@example.com</p>
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle me-1"></i>Active
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Account Settings -->
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="fas fa-lock me-2"></i>Security</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-outline-primary w-100">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-1">&copy; 2026 Travel Planner BD. Based in Bangladesh. All rights reserved.</p>
+            <p class="small mb-0">Contact: info@travelplannerbd.com | +8801XXXXXXXXX</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js?v=20260909-no-bar"></script>
+    <script src="js/profile.js?v=3"></script>
+</body>
+</html>

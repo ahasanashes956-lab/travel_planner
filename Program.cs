@@ -1,0 +1,256 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using TravelPlanner.Data;
+using TravelPlanner.Models;
+using TravelPlanner.Services;
+using TravelPlanner.Repositories;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+// Add Identity services
+builder.Services
+    .AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.SignIn.RequireConfirmedEmail = false;
+        options.Password.RequireDigit = true;
+        options.Password.RequiredLength = 10;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireLowercase = true;
+    })
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+// Configure authentication to return 401 for API requests instead of redirecting
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = context =>
+    {
+        // Check if this is an API request
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        }
+        else
+        {
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        }
+    };
+});
+
+// Add MVC and controllers
+builder.Services.AddControllersWithViews();
+
+// Add CORS for frontend communication
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder =>
+    {
+         builder.WithOrigins("http://localhost:8000", "http://127.0.0.1:8000")
+             .AllowCredentials()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+
+// Add Email Service
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Add repositories
+builder.Services.AddScoped<ITripRepository, TripRepository>();
+builder.Services.AddScoped<IDestinationRepository, DestinationRepository>();
+builder.Services.AddScoped<IAccommodationRepository, AccommodationRepository>();
+builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Unhandled exception");
+
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = 500;
+
+        await context.Response.WriteAsJsonAsync(new { 
+            message = "An internal server error occurred", 
+            details = ex.Message 
+        });
+    }
+});
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+app.UseRouting();
+
+// Enable CORS
+app.UseCors("AllowFrontend");
+
+// Add authentication and authorization
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Protect the static admin console with the real Identity session and role.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.Equals("/admin.html", StringComparison.OrdinalIgnoreCase) &&
+        (!context.User.Identity?.IsAuthenticated ?? true || !context.User.IsInRole("Admin")))
+    {
+        context.Response.Redirect("/login.html?returnUrl=%2Fadmin.html");
+        return;
+    }
+
+    await next();
+});
+
+// Serve static files after authentication so admin.html cannot bypass the guard.
+app.UseStaticFiles();
+
+var frontendPath = Path.Combine(Directory.GetCurrentDirectory(), "Frontend");
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(frontendPath),
+    RequestPath = ""
+});
+
+// Map controller routes
+app.MapControllers(); // Enable attribute-based routing (for /api/* endpoints)
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Default route - serve index.html for root
+app.MapGet("/", async context =>
+{
+    context.Response.ContentType = "text/html";
+    await context.Response.SendFileAsync(Path.Combine(frontendPath, "index.html"));
+});
+    
+app.MapGet("/favicon.ico", async context =>
+{
+    context.Response.ContentType = "image/svg+xml";
+    await context.Response.SendFileAsync(Path.Combine(frontendPath, "images", "travel-placeholder.svg"));
+});
+
+// Fallback handler for SPA - serve requested file or index.html (exclude API routes)
+app.MapFallback(async context =>
+{
+    var path = context.Request.Path.Value;
+    
+    // Skip API routes
+    if (path != null && path.StartsWith("/api/"))
+    {
+        context.Response.StatusCode = 404;
+        await context.Response.WriteAsync("Not Found");
+        return;
+    }
+    
+    var filePath = Path.Combine(frontendPath, path.TrimStart('/'));
+    
+    if (File.Exists(filePath) && !Directory.Exists(filePath))
+    {
+        await context.Response.SendFileAsync(filePath);
+    }
+    else
+    {
+        // Serve index.html for SPA routing
+        context.Response.ContentType = "text/html";
+        await context.Response.SendFileAsync(Path.Combine(frontendPath, "index.html"));
+    }
+});
+
+// Create or update database
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    if (dbContext.Database.CanConnect() && dbContext.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM sys.tables WHERE name = 'Destinations'").Single() == 0)
+    {
+        dbContext.Database.EnsureDeleted();
+    }
+    dbContext.Database.EnsureCreated();
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID('dbo.Attractions', 'U') IS NULL
+        BEGIN
+            CREATE TABLE [Attractions]
+            (
+                [Id] int NOT NULL IDENTITY,
+                [DestinationId] int NOT NULL,
+                [Name] nvarchar(max) NULL,
+                [Description] nvarchar(max) NULL,
+                [ImageUrl] nvarchar(max) NULL,
+                [Latitude] decimal(9,6) NOT NULL,
+                [Longitude] decimal(9,6) NOT NULL,
+                [Category] nvarchar(max) NULL,
+                [EntryFee] nvarchar(max) NULL,
+                [OpeningHours] nvarchar(max) NULL,
+                [Rating] decimal(3,2) NOT NULL,
+                [CreatedAt] datetime2 NOT NULL,
+                CONSTRAINT [PK_Attractions] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_Attractions_Destinations_DestinationId]
+                    FOREIGN KEY ([DestinationId]) REFERENCES [Destinations] ([Id]) ON DELETE CASCADE
+            );
+            CREATE INDEX [IX_Attractions_DestinationId] ON [Attractions] ([DestinationId]);
+        END");
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF COL_LENGTH('Destinations', 'IsPopular') IS NULL
+        BEGIN
+            ALTER TABLE [Destinations]
+                ADD [IsPopular] bit NOT NULL
+                    CONSTRAINT [DF_Destinations_IsPopular] DEFAULT 0;
+        END");
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF COL_LENGTH('Destinations', 'IsPopular') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM [Destinations] WHERE [IsPopular] = 1)
+        BEGIN
+            UPDATE [Destinations]
+                SET [IsPopular] = CASE WHEN [AverageRating] >= 4.7 THEN 1 ELSE 0 END;
+        END");
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID('dbo.DestinationImages', 'U') IS NULL
+        BEGIN
+            CREATE TABLE [DestinationImages]
+            (
+                [Id] int NOT NULL IDENTITY,
+                [DestinationId] int NOT NULL,
+                [ImageUrl] nvarchar(max) NULL,
+                [Title] nvarchar(max) NULL,
+                [Description] nvarchar(max) NULL,
+                [Order] int NOT NULL,
+                [CreatedAt] datetime2 NOT NULL,
+                CONSTRAINT [PK_DestinationImages] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_DestinationImages_Destinations_DestinationId]
+                    FOREIGN KEY ([DestinationId]) REFERENCES [Destinations] ([Id]) ON DELETE CASCADE
+            );
+            CREATE INDEX [IX_DestinationImages_DestinationId] ON [DestinationImages] ([DestinationId]);
+        END");
+    dbContext.Database.ExecuteSqlRaw("IF COL_LENGTH('Reviews', 'TripId') IS NULL ALTER TABLE Reviews ADD TripId int NULL");
+    dbContext.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Reviews_Trips_TripId') ALTER TABLE Reviews ADD CONSTRAINT FK_Reviews_Trips_TripId FOREIGN KEY (TripId) REFERENCES Trips(Id) ON DELETE CASCADE");
+    dbContext.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Reviews_TripId_UserId' AND object_id = OBJECT_ID('Reviews')) CREATE INDEX IX_Reviews_TripId_UserId ON Reviews(TripId, UserId)");
+    DatabaseSeeder.SeedDatabase(dbContext);
+    await DatabaseSeeder.SeedDefaultUsersAsync(scope.ServiceProvider);
+}
+
+Console.WriteLine("🚀 Travel Planner running on http://localhost:8000");
+app.Run("http://localhost:8000");
