@@ -25,16 +25,6 @@ namespace TravelPlanner.Repositories
                 .ToListAsync();
         }
 
-            public async Task<IEnumerable<Destination>> GetPublishedDestinationsAsync()
-            {
-                return await _context.Destinations
-                .Where(d => d.IsPublished)
-                .Include(d => d.Attractions)
-                .Include(d => d.Images)
-                .OrderBy(d => d.Name)
-                .ToListAsync();
-            }
-
         public async Task<Destination> GetDestinationByIdAsync(int id)
         {
             return await _context.Destinations
@@ -44,20 +34,10 @@ namespace TravelPlanner.Repositories
                 .FirstOrDefaultAsync(d => d.Id == id);
         }
 
-            public async Task<Destination?> GetPublishedDestinationByIdAsync(int id)
-            {
-                return await _context.Destinations
-                .Where(d => d.Id == id && d.IsPublished)
-                .Include(d => d.Attractions)
-                .Include(d => d.Images)
-                .Include(d => d.Reviews)
-                .FirstOrDefaultAsync();
-            }
-
         public async Task<Destination?> GetDestinationSummaryByIdAsync(int id)
         {
             return await _context.Destinations
-                .Where(destination => destination.Id == id && destination.IsPublished)
+                .Where(destination => destination.Id == id)
                 .Select(destination => new Destination
                 {
                     Id = destination.Id,
@@ -70,7 +50,6 @@ namespace TravelPlanner.Repositories
         public async Task<IEnumerable<Destination>> GetDestinationSummariesAsync()
         {
             return await _context.Destinations
-                .Where(destination => destination.IsPublished)
                 .Select(destination => new Destination
                 {
                     Id = destination.Id,
@@ -84,9 +63,9 @@ namespace TravelPlanner.Repositories
         public async Task<IEnumerable<Destination>> SearchDestinationsAsync(string query)
         {
             return await _context.Destinations
-                .Where(d => d.IsPublished && (EF.Functions.Like(d.Name, $"%{query}%") ||
+                .Where(d => EF.Functions.Like(d.Name, $"%{query}%") ||
                            EF.Functions.Like(d.Country, $"%{query}%") ||
-                           EF.Functions.Like(d.Region, $"%{query}%")))
+                           EF.Functions.Like(d.Region, $"%{query}%"))
                 .Include(d => d.Attractions)
                 .ToListAsync();
         }
@@ -94,7 +73,7 @@ namespace TravelPlanner.Repositories
         public async Task<IEnumerable<Destination>> GetPopularDestinationsAsync()
         {
             return await _context.Destinations
-                .Where(d => d.IsPublished && d.IsPopular)
+                .Where(d => d.IsPopular)
                 .OrderByDescending(d => d.AverageRating)
                 .Take(10)
                 .Include(d => d.Images)

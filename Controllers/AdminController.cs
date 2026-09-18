@@ -41,7 +41,7 @@ namespace TravelPlanner.Controllers
                 "tokyo" => "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=900&auto=format&fit=crop",
                 "swiss alps" => "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=900&auto=format&fit=crop",
                 "new york" => "https://images.unsplash.com/photo-1496588152823-86ff7695e68f?q=80&w=900&auto=format&fit=crop",
-                _ => $"https://images.unsplash.com/photo-1500534623283-312aade485b7?q=80&w=900&auto=format&fit=crop"
+                _ => "/images/travel-placeholder.svg"
             };
         }
 
@@ -131,35 +131,7 @@ namespace TravelPlanner.Controllers
                 bestTimeToVisit = destination.BestTimeToVisit,
                 category = destination.Category,
                 averageRating = destination.AverageRating,
-                isPublished = destination.IsPublished,
                 createdAt = destination.CreatedAt
-            }));
-        }
-
-        [HttpGet("payments")]
-        public async Task<IActionResult> GetPayments()
-        {
-            var payments = await _context.Payments
-                .Include(payment => payment.User)
-                .Include(payment => payment.Trip)
-                    .ThenInclude(trip => trip!.Destination)
-                .OrderByDescending(payment => payment.CreatedAt)
-                .ToListAsync();
-
-            return Ok(payments.Select(payment => new
-            {
-                id = payment.Id,
-                userName = $"{payment.User?.FirstName} {payment.User?.LastName}".Trim(),
-                email = payment.User?.Email,
-                tripTitle = payment.Trip?.Title,
-                destination = payment.Trip?.Destination?.Name,
-                amount = payment.Amount,
-                currency = payment.Currency,
-                paymentMethod = payment.PaymentMethod,
-                status = payment.Status,
-                transactionId = payment.TransactionId,
-                createdAt = payment.CreatedAt,
-                paidAt = payment.PaidAt
             }));
         }
 
@@ -180,7 +152,6 @@ namespace TravelPlanner.Controllers
                 BestTimeToVisit = request.BestTimeToVisit?.Trim(),
                 Category = request.Category.Trim(),
                 AverageRating = 0,
-                IsPublished = true,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -199,7 +170,6 @@ namespace TravelPlanner.Controllers
                     bestTimeToVisit = created.BestTimeToVisit,
                     category = created.Category,
                     averageRating = created.AverageRating,
-                    isPublished = created.IsPublished,
                     createdAt = created.CreatedAt
                 }
             });
@@ -213,19 +183,6 @@ namespace TravelPlanner.Controllers
                 return NotFound(new { message = "Destination not found." });
 
             return Ok(new { message = "Destination deleted successfully." });
-        }
-
-        [HttpPost("destinations/{id:int}/publish")]
-        public async Task<IActionResult> SetDestinationPublished(int id, [FromBody] PublishDestinationRequest request)
-        {
-            var destination = await _destinationRepository.GetAllDestinationsAsync();
-            var target = destination.FirstOrDefault(item => item.Id == id);
-            if (target == null)
-                return NotFound(new { message = "Destination not found." });
-
-            target.IsPublished = request?.IsPublished ?? false;
-            await _destinationRepository.UpdateDestinationAsync(target);
-            return Ok(new { message = target.IsPublished ? "Destination published." : "Destination unpublished.", isPublished = target.IsPublished });
         }
 
         public sealed class UserStatusRequest
@@ -242,11 +199,6 @@ namespace TravelPlanner.Controllers
             public string? ImageUrl { get; set; }
             public string? BestTimeToVisit { get; set; }
             public string? Category { get; set; }
-        }
-
-        public sealed class PublishDestinationRequest
-        {
-            public bool IsPublished { get; set; }
         }
     }
 }
