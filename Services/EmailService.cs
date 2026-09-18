@@ -23,9 +23,15 @@ namespace TravelPlanner.Services
             try
             {
                 var smtpServer = _configuration["EmailSettings:SmtpServer"];
-                var port = int.Parse(_configuration["EmailSettings:Port"]);
                 var senderEmail = _configuration["EmailSettings:SenderEmail"];
                 var senderPassword = _configuration["EmailSettings:SenderPassword"];
+                if (!int.TryParse(_configuration["EmailSettings:Port"], out var port) ||
+                    string.IsNullOrWhiteSpace(smtpServer) ||
+                    string.IsNullOrWhiteSpace(senderEmail) ||
+                    string.IsNullOrWhiteSpace(senderPassword))
+                {
+                    throw new InvalidOperationException("Email settings are incomplete.");
+                }
 
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress("Travel Planner", senderEmail));
@@ -35,7 +41,7 @@ namespace TravelPlanner.Services
 
                 using (var client = new SmtpClient())
                 {
-                    await client.ConnectAsync(smtpServer, port, false);
+                    await client.ConnectAsync(smtpServer, port, MailKit.Security.SecureSocketOptions.StartTls);
                     await client.AuthenticateAsync(senderEmail, senderPassword);
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
