@@ -7,68 +7,8 @@ const TRIPS_API_URL = window.location.origin === 'null' ? 'http://localhost:8000
 document.addEventListener('DOMContentLoaded', function() {
     loadTrips();
     bindExpenseForm();
-    bindMockPayment();
     bindTripFilters();
 });
-
-function bindMockPayment() {
-    const modal = document.getElementById('paymentModal');
-    const form = document.getElementById('paymentForm');
-    if (!modal || !form) return;
-
-    document.addEventListener('click', event => {
-        const button = event.target.closest('.pay-now-btn');
-        if (!button) return;
-
-        document.getElementById('paymentTripId').value = button.dataset.tripId;
-        document.getElementById('paymentAmount').textContent = `BDT ${Number(button.dataset.amount || 0).toLocaleString()}`;
-        document.getElementById('paymentTripTitle').textContent = button.dataset.tripTitle || 'Trip payment';
-        document.getElementById('paymentMessage').hidden = true;
-        bootstrap.Modal.getOrCreateInstance(modal).show();
-    });
-
-    form.addEventListener('submit', async event => {
-        event.preventDefault();
-        const tripId = Number(document.getElementById('paymentTripId').value);
-        const paymentMethod = document.getElementById('paymentMethod').value;
-        const message = document.getElementById('paymentMessage');
-        const submitButton = document.getElementById('paymentSubmit');
-
-        submitButton.disabled = true;
-        submitButton.textContent = 'Processing...';
-        message.hidden = true;
-
-        try {
-            const initiateResponse = await fetch(`${TRIPS_API_URL}/api/payments/initiate`, {
-                method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tripId, paymentMethod })
-            });
-            const initiateData = await initiateResponse.json().catch(() => ({}));
-            if (!initiateResponse.ok) throw new Error(initiateData.message || 'Could not start payment.');
-
-            const result = document.querySelector('input[name="mockPaymentResult"]:checked')?.value || 'success';
-            const resultResponse = await fetch(`${TRIPS_API_URL}/api/payments/${initiateData.paymentId}/mock-result`, {
-                method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ result })
-            });
-            const resultData = await resultResponse.json().catch(() => ({}));
-            if (!resultResponse.ok) throw new Error(resultData.message || 'Payment could not be completed.');
-
-            message.hidden = false;
-            message.className = `alert ${resultData.status === 'Paid' ? 'alert-success' : 'alert-warning'} mb-0`;
-            message.textContent = `${resultData.message}${resultData.transactionId ? ` Transaction: ${resultData.transactionId}` : ''}`;
-            form.reset();
-            await loadTrips();
-        } catch (error) {
-            message.hidden = false;
-            message.className = 'alert alert-danger mb-0';
-            message.textContent = error.message || 'Payment failed.';
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Process Mock Payment';
-        }
-    });
-}
 
 function bindTripFilters() {
     const search = document.getElementById('tripSearch');
@@ -120,31 +60,6 @@ function bindExpenseForm() {
         }
 
         try {
-            const paymentResponse = await fetch(`${TRIPS_API_URL}/api/payments/initiate-expense`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tripId: Number(tripId), amount, paymentMethod: 'Mock Card' })
-            });
-            const paymentData = await paymentResponse.json().catch(() => ({}));
-            if (!paymentResponse.ok) throw new Error(paymentData.message || 'Could not start expense payment.');
-
-            const shouldPay = window.confirm(`Pay BDT ${amount.toLocaleString()} for this new expense? This is a mock payment.`);
-            if (!shouldPay) throw new Error('Expense payment cancelled.');
-
-            const resultResponse = await fetch(`${TRIPS_API_URL}/api/payments/${paymentData.paymentId}/mock-result`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ result: 'success' })
-            });
-            const resultData = await resultResponse.json().catch(() => ({}));
-            if (!resultResponse.ok || resultData.status !== 'Paid') throw new Error(resultData.message || 'Expense payment failed.');
-
-            if (!paymentData.paymentId || Number(paymentData.amount) <= 0) {
-                throw new Error('The expense payment was completed, but its reference was missing. Please try again.');
-            }
-
             const response = await fetch(`${TRIPS_API_URL}/api/trips/${tripId}/expenses`, {
                 method: 'POST',
                 credentials: 'include',
@@ -153,8 +68,7 @@ function bindExpenseForm() {
                 },
                 body: JSON.stringify({
                     name,
-                    amount: Number(paymentData.amount),
-                    paymentId: paymentData.paymentId
+                    amount
                 })
             });
 
@@ -316,7 +230,7 @@ async function loadTrips() {
                             <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
                                 <div>
                                     <span class="badge bg-info me-1">${trip.tripType || 'Trip'}</span>
-                                    <span class="badge ${trip.status === 'Planned' ? 'bg-warning' : trip.status === 'Ongoing' || trip.status === 'Confirmed' ? 'bg-success' : 'bg-secondary'}">
+                                    <span class="badge ${trip.status === 'Planned' ? 'bg-warning' : trip.status === 'Ongoing' ? 'bg-success' : 'bg-secondary'}">
                                         ${trip.status || 'Planned'}
                                     </span>
                                 </div>
@@ -326,10 +240,6 @@ async function loadTrips() {
                                     <span>Expense</span>
                                 </button>
                             </div>
-
-                            <button type="button" class="btn btn-sm btn-primary w-100 pay-now-btn" data-trip-id="${trip.id}" data-trip-title="${(trip.title || 'Trip').replace(/"/g, '&quot;')}" data-amount="${budgetLimit}">
-                                <i class="fas fa-credit-card me-1"></i>Pay Now
-                            </button>
 
                             <div class="d-grid gap-2 mb-3">
                                 <a href="/trip/edit/${trip.id}" class="btn btn-sm btn-outline-primary">
