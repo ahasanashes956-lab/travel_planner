@@ -1,0 +1,197 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="card-body p-4">
+                    <h1 class="card-title mb-2">Welcome, @Model.User.FirstName @Model.User.LastName!</h1>
+                    <p class="card-text">Let's start planning your next adventure</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-0">Total Trips</p>
+                            <h3 class="fw-bold text-primary">@Model.TotalTrips</h3>
+                        </div>
+                        <i class="fas fa-suitcase fa-3x text-primary opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-0">Active Trips</p>
+                            <h3 class="fw-bold text-success">@Model.ActiveTrips</h3>
+                        </div>
+                        <i class="fas fa-map fa-3x text-success opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-0">Total Budget</p>
+                            <h3 class="fw-bold text-warning">${@Model.TotalBudget.ToString("F2")}</h3>
+                        </div>
+                        <i class="fas fa-wallet fa-3x text-warning opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted mb-0">Total Spent</p>
+                            <h3 class="fw-bold text-danger">${@Model.TotalSpent.ToString("F2")}</h3>
+                        </div>
+                        <i class="fas fa-credit-card fa-3x text-danger opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Quick Actions</h5>
+                    <a href="/trip/create" class="btn btn-primary me-2 mb-2">
+                        <i class="fas fa-plus me-2"></i>Create New Trip
+                    </a>
+                    <a href="/destination" class="btn btn-success me-2 mb-2">
+                        <i class="fas fa-search me-2"></i>Explore Destinations
+                    </a>
+                    <a href="/dashboard/profile" class="btn btn-info mb-2">
+                        <i class="fas fa-user me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Trips -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Upcoming Trips</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.UpcomingTrips.Count > 0)
+                    {
+                        @foreach (var trip in Model.UpcomingTrips)
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">@trip.Title</h6>
+                                    <small class="text-muted">
+                                        @trip.StartDate.ToString("MMM dd") - @trip.EndDate.ToString("MMM dd")
+                                    </small>
+                                </div>
+                                <a href="/trip/details/@trip.Id" class="btn btn-sm btn-outline-primary">View</a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No upcoming trips. <a href="/trip/create">Create one now!</a></p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Trips -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white border-0">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Trips</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentTrips.Count > 0)
+                    {
+                        @foreach (var trip in Model.RecentTrips)
+                        {
+                            var isCompleted = trip.Status == "Completed" || trip.Status == "Ended";
+                            var hasReview = Model.TripReviews.ContainsKey(trip.Id);
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">@trip.Title</h6>
+                                    <small class="text-muted">
+                                        Created: @trip.CreatedAt.ToString("MMM dd, yyyy")
+                                    </small>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="/trip/details/@trip.Id" class="btn btn-sm btn-outline-success">View</a>
+                                    @if (isCompleted && hasReview)
+                                    {
+                                        <span class="badge bg-success align-content-center">Reviewed</span>
+                                    }
+                                    else if (isCompleted)
+                                    {
+                                        <button class="btn btn-sm btn-outline-warning" type="button" data-bs-toggle="collapse" data-bs-target="#review-@trip.Id" aria-expanded="false" aria-controls="review-@trip.Id">
+                                            <i class="fas fa-star me-1"></i>Rate &amp; Review
+                                        </button>
+                                    }
+                                </div>
+                                </div>
+                                @if (isCompleted && !hasReview)
+                                {
+                                    <div class="collapse mt-3" id="review-@trip.Id">
+                                        <form asp-action="SubmitTripReview" method="post" class="bg-light rounded p-3">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="TripId" value="@trip.Id" />
+                                            <label for="rating-@trip.Id" class="form-label fw-semibold">Your rating</label>
+                                            <select class="form-select mb-2" id="rating-@trip.Id" name="Rating" required>
+                                                <option value="">Choose a rating</option>
+                                                <option value="5">★★★★★ Excellent</option>
+                                                <option value="4">★★★★ Very good</option>
+                                                <option value="3">★★★ Good</option>
+                                                <option value="2">★★ Needs improvement</option>
+                                                <option value="1">★ Poor</option>
+                                            </select>
+                                            <label for="content-@trip.Id" class="form-label fw-semibold">Feedback <span class="text-muted fw-normal">(optional)</span></label>
+                                            <textarea class="form-control mb-2" id="content-@trip.Id" name="Content" rows="3" maxlength="2000" placeholder="Tell us about your trip"></textarea>
+                                            <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-paper-plane me-1"></i>Submit review</button>
+                                        </form>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No completed trips yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

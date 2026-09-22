@@ -181,7 +181,7 @@
   - `Frontend/login.html`
   - `Frontend/register.html`
   - `Frontend/forgot-password.html`
-  - `Frontend/forgot-password.htm`
+  - `Frontend/reset-password.html`
   - `Frontend/profile.html`
   - `Frontend/js/auth.js`
   - `Frontend/js/profile.js`
@@ -276,7 +276,7 @@
   - `API_ROUTES.md`
   - `PROJECT_DOCUMENTATION.md`
   - `README.md`
-  
+  - `PROJECT_BREAKDOWN.md`
 - **Description:** AI travel assistant widget, Razor MVC fallback pages, shared MVC assets, home presentation, frontend launcher scripts এবং final project documentation এই part-এ থাকবে।
 - **Git Commands:**
   ```bash

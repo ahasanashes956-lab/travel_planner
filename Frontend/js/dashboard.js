@@ -93,8 +93,7 @@ async function updateDashboardStats() {
 
     const recentTrips = trips
         .slice()
-        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-        .slice(0, 3);
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
     const recentContainer = document.getElementById('recentTrips');
     if (recentTrips.length > 0) {

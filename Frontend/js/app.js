@@ -114,6 +114,18 @@ const destinations = [
 // Global Functions
 // ==========================================
 
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => registration.unregister());
+        }).catch(() => {});
+
+        caches.keys().then(keys => {
+            return Promise.all(keys.map(key => caches.delete(key)));
+        }).catch(() => {});
+    });
+}
+
 function showNotification(message, type = 'success') {
     const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
     const alertHTML = `

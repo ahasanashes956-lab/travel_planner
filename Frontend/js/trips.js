@@ -7,8 +7,85 @@ const TRIPS_API_URL = window.location.origin === 'null' ? 'http://localhost:8000
 document.addEventListener('DOMContentLoaded', function() {
     loadTrips();
     bindExpenseForm();
+    bindMockPayment();
     bindTripFilters();
 });
+
+function bindMockPayment() {
+    const modal = document.getElementById('paymentModal');
+    const form = document.getElementById('paymentForm');
+    if (!modal || !form) return;
+
+    if (form.dataset.paymentBound === 'true') {
+        return;
+    }
+    form.dataset.paymentBound = 'true';
+
+    document.addEventListener('click', function handlePayNowClick(event) {
+        const button = event.target.closest('.pay-now-btn');
+        if (!button) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const tripId = Number(button.dataset.tripId);
+        const amount = Number(button.dataset.amount || 0);
+        if (!tripId || !amount || amount <= 0) {
+            showNotification('This trip has no valid payment amount.', 'danger');
+            return;
+        }
+
+        document.getElementById('paymentTripId').value = tripId;
+        document.getElementById('paymentAmount').textContent = `BDT ${amount.toLocaleString()}`;
+        document.getElementById('paymentTripTitle').textContent = button.dataset.tripTitle || 'Trip payment';
+        document.getElementById('paymentMessage').hidden = true;
+
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
+        modalInstance.show();
+    });
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const tripId = Number(document.getElementById('paymentTripId').value);
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const message = document.getElementById('paymentMessage');
+        const submitButton = document.getElementById('paymentSubmit');
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'Processing...';
+        message.hidden = true;
+
+        try {
+            const initiateResponse = await fetch(`${TRIPS_API_URL}/api/payments/initiate`, {
+                method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tripId, paymentMethod })
+            });
+            const initiateData = await initiateResponse.json().catch(() => ({}));
+            if (!initiateResponse.ok) throw new Error(initiateData.message || 'Could not start payment.');
+
+            const result = document.querySelector('input[name="mockPaymentResult"]:checked')?.value || 'success';
+            const resultResponse = await fetch(`${TRIPS_API_URL}/api/payments/${initiateData.paymentId}/mock-result`, {
+                method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ result })
+            });
+            const resultData = await resultResponse.json().catch(() => ({}));
+            if (!resultResponse.ok) throw new Error(resultData.message || 'Payment could not be completed.');
+
+            message.hidden = false;
+            message.className = `alert ${resultData.status === 'Paid' ? 'alert-success' : 'alert-warning'} mb-0`;
+            message.textContent = `${resultData.message}${resultData.transactionId ? ` Transaction: ${resultData.transactionId}` : ''}`;
+            form.reset();
+            await loadTrips();
+        } catch (error) {
+            message.hidden = false;
+            message.className = 'alert alert-danger mb-0';
+            message.textContent = error.message || 'Payment failed.';
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Process Mock Payment';
+        }
+    });
+}
 
 function bindTripFilters() {
     const search = document.getElementById('tripSearch');
@@ -60,6 +137,31 @@ function bindExpenseForm() {
         }
 
         try {
+            const paymentResponse = await fetch(`${TRIPS_API_URL}/api/payments/initiate-expense`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tripId: Number(tripId), amount, paymentMethod: 'Mock Card' })
+            });
+            const paymentData = await paymentResponse.json().catch(() => ({}));
+            if (!paymentResponse.ok) throw new Error(paymentData.message || 'Could not start expense payment.');
+
+            const shouldPay = window.confirm(`Pay BDT ${amount.toLocaleString()} for this new expense? This is a mock payment.`);
+            if (!shouldPay) throw new Error('Expense payment cancelled.');
+
+            const resultResponse = await fetch(`${TRIPS_API_URL}/api/payments/${paymentData.paymentId}/mock-result`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ result: 'success' })
+            });
+            const resultData = await resultResponse.json().catch(() => ({}));
+            if (!resultResponse.ok || resultData.status !== 'Paid') throw new Error(resultData.message || 'Expense payment failed.');
+
+            if (!paymentData.paymentId || Number(paymentData.amount) <= 0) {
+                throw new Error('The expense payment was completed, but its reference was missing. Please try again.');
+            }
+
             const response = await fetch(`${TRIPS_API_URL}/api/trips/${tripId}/expenses`, {
                 method: 'POST',
                 credentials: 'include',
@@ -68,7 +170,8 @@ function bindExpenseForm() {
                 },
                 body: JSON.stringify({
                     name,
-                    amount
+                    amount: Number(paymentData.amount),
+                    paymentId: paymentData.paymentId
                 })
             });
 
@@ -166,23 +269,27 @@ async function loadTrips() {
         try {
             trips = JSON.parse(trimmedResponse);
         } catch (parseError) {
-            // If server returned HTML (login page or error page), redirect to login
             const lower = trimmedResponse.toLowerCase();
             if (lower.includes('login') || lower.includes('<html') || lower.includes('<!doctype')) {
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Unknown response — surface the original error to console and show empty state
             console.error('Failed to parse trips JSON response', parseError, trimmedResponse);
             showEmptyState();
             return;
         }
+
         const safeTrips = Array.isArray(trips) ? trips : [];
         window.__tripsData = safeTrips;
-        const currentTrips = safeTrips;
+
+        if (safeTrips.length === 0) {
+            showEmptyState();
+            return;
+        }
+
         const duplicateKeys = new Set();
-        const tripRows = currentTrips.map(trip => {
+        const tripRows = safeTrips.map(trip => {
             const key = [
                 (trip.title || '').trim().toLowerCase(),
                 trip.destination?.id || '',
@@ -194,12 +301,7 @@ async function loadTrips() {
             return { trip, isDuplicate };
         });
 
-        if (tripRows.length === 0) {
-            showEmptyState();
-            return;
-        }
-
-        container.innerHTML = `${tripRows.map(({ trip, isDuplicate }) => {
+        container.innerHTML = tripRows.map(({ trip, isDuplicate }) => {
             const budgetLimit = Number(trip.budgetLimit) || 0;
             const totalSpent = Number(trip.totalSpent) || 0;
             const remainingBudget = budgetLimit - totalSpent;
@@ -230,7 +332,7 @@ async function loadTrips() {
                             <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
                                 <div>
                                     <span class="badge bg-info me-1">${trip.tripType || 'Trip'}</span>
-                                    <span class="badge ${trip.status === 'Planned' ? 'bg-warning' : trip.status === 'Ongoing' ? 'bg-success' : 'bg-secondary'}">
+                                    <span class="badge ${trip.status === 'Planned' ? 'bg-warning' : trip.status === 'Ongoing' || trip.status === 'Confirmed' ? 'bg-success' : 'bg-secondary'}">
                                         ${trip.status || 'Planned'}
                                     </span>
                                 </div>
@@ -240,6 +342,10 @@ async function loadTrips() {
                                     <span>Expense</span>
                                 </button>
                             </div>
+
+                            <button type="button" class="btn btn-sm btn-primary w-100 pay-now-btn" data-trip-id="${trip.id}" data-trip-title="${(trip.title || 'Trip').replace(/"/g, '&quot;')}" data-amount="${budgetLimit}">
+                                <i class="fas fa-credit-card me-1"></i>Pay Now
+                            </button>
 
                             <div class="d-grid gap-2 mb-3">
                                 <a href="/trip/edit/${trip.id}" class="btn btn-sm btn-outline-primary">
@@ -263,9 +369,10 @@ async function loadTrips() {
                     </div>
                 </div>
             `;
-        }).join('')}`;
+        }).join('');
 
         if (window.applyTripFilters) window.applyTripFilters();
+        bindMockPayment();
     } catch (error) {
         console.error('Trip loading error:', error);
 
