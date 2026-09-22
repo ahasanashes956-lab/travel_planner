@@ -20,13 +20,23 @@ document.getElementById('registerForm')?.addEventListener('submit', async functi
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
+    const resetSubmitButton = () => {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Register';
+        }
+    };
+
     if (password !== confirmPassword) {
         showNotification('Passwords do not match!', 'error');
+        resetSubmitButton();
         return;
     }
 
-    if (password.length < 6) {
-        showNotification('Password must be at least 6 characters!', 'error');
+    const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!passwordPolicy.test(password)) {
+        showNotification('Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character.', 'error');
+        resetSubmitButton();
         return;
     }
 
@@ -63,10 +73,7 @@ document.getElementById('registerForm')?.addEventListener('submit', async functi
         console.error('Registration error:', error);
         showNotification('Registration error: ' + error.message, 'error');
     } finally {
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Register';
-        }
+        resetSubmitButton();
     }
 });
 
@@ -143,29 +150,31 @@ document.getElementById('loginForm')?.addEventListener('submit', async function(
 
 // Check if user is logged in
 async function checkAuth() {
+    const protectedPages = ['dashboard.html', 'trips.html', 'profile.html', 'create-trip.html', 'admin.html'];
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    const isPublicPage = ['index.html', 'login.html', 'register.html', 'forgot-password.html', 'reset-password.html', 'destinations.html', 'privacy.html'].includes(path);
+
+    if (isPublicPage) {
+        return;
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/api/current-user`, {
-            credentials: 'include'
+            credentials: 'include',
+            cache: 'no-store'
         });
 
         const data = await response.json().catch(() => ({}));
         const isAuthenticated = response.ok && data.isAuthenticated === true;
-        
-        if (!isAuthenticated && 
-            !window.location.href.includes('index.html') && 
-            !window.location.href.includes('login.html') && 
-            !window.location.href.includes('register.html') && 
-            !window.location.href.includes('destinations.html')) {
-            window.location.href = 'login.html';
+
+        if (!isAuthenticated) {
+            if (protectedPages.includes(path)) {
+                window.location.href = 'login.html';
+            }
         }
     } catch (error) {
-        console.error('Auth check error:', error);
-        // If server is unreachable, fall back to localStorage check
-        if (!isLoggedIn() && 
-            !window.location.href.includes('index.html') && 
-            !window.location.href.includes('login.html') && 
-            !window.location.href.includes('register.html') && 
-            !window.location.href.includes('destinations.html')) {
+        console.warn('Auth check could not reach the API; leaving user on the current page until the server is available.', error);
+        if (!isLoggedIn() && protectedPages.includes(path)) {
             window.location.href = 'login.html';
         }
     }

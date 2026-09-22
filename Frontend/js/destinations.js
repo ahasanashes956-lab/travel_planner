@@ -3,6 +3,9 @@
 // ==========================================
 
 const destinationImageFallbacks = {
+    "cox's bazar": '/images/beach-saint-martins-island-bangladesh.jpg',
+    'cox bazar': '/images/beach-saint-martins-island-bangladesh.jpg',
+    'saint martin': '/images/beach-saint-martins-island-bangladesh.jpg',
     bali: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=1200&auto=format&fit=crop',
     beach: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop',
     'new york': 'https://images.unsplash.com/photo-1496588152823-86ff7695e68f?q=80&w=1200&auto=format&fit=crop',

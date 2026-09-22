@@ -250,6 +250,18 @@ namespace TravelPlanner.Controllers
                     return BadRequest(new { message = "Passwords do not match" });
                 }
 
+                if (model.Password.Length < 8 ||
+                    !model.Password.Any(char.IsUpper) ||
+                    !model.Password.Any(char.IsLower) ||
+                    !model.Password.Any(char.IsDigit) ||
+                    !model.Password.Any(ch => !char.IsLetterOrDigit(ch)))
+                {
+                    return BadRequest(new
+                    {
+                        message = "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character."
+                    });
+                }
+
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
@@ -308,6 +320,11 @@ namespace TravelPlanner.Controllers
                 if (!isAdmin && !user.IsVerified)
                 {
                     return Unauthorized(new { message = "This account is awaiting admin approval." });
+                }
+
+                if (!user.IsActive)
+                {
+                    return Unauthorized(new { message = "This account has been deactivated." });
                 }
 
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);

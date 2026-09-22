@@ -57,7 +57,6 @@ namespace TravelPlanner.Controllers
                 .ToList();
 
             var recentTrips = trips
-                .Where(t => t.Status == "Completed" || t.EndDate.Date < today)
                 .OrderByDescending(t => t.EndDate)
                 .ToList();
 

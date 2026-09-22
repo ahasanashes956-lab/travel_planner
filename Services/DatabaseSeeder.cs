@@ -45,7 +45,8 @@ namespace TravelPlanner.Services
                         FirstName = demoUser.FirstName,
                         LastName = demoUser.LastName,
                         EmailConfirmed = true,
-                        IsVerified = demoUser.Role == "User",
+                        IsVerified = true,
+                        IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     };
 

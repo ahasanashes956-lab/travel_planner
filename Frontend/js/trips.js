@@ -16,15 +16,32 @@ function bindMockPayment() {
     const form = document.getElementById('paymentForm');
     if (!modal || !form) return;
 
-    document.addEventListener('click', event => {
+    if (form.dataset.paymentBound === 'true') {
+        return;
+    }
+    form.dataset.paymentBound = 'true';
+
+    document.addEventListener('click', function handlePayNowClick(event) {
         const button = event.target.closest('.pay-now-btn');
         if (!button) return;
 
-        document.getElementById('paymentTripId').value = button.dataset.tripId;
-        document.getElementById('paymentAmount').textContent = `BDT ${Number(button.dataset.amount || 0).toLocaleString()}`;
+        event.preventDefault();
+        event.stopPropagation();
+
+        const tripId = Number(button.dataset.tripId);
+        const amount = Number(button.dataset.amount || 0);
+        if (!tripId || !amount || amount <= 0) {
+            showNotification('This trip has no valid payment amount.', 'danger');
+            return;
+        }
+
+        document.getElementById('paymentTripId').value = tripId;
+        document.getElementById('paymentAmount').textContent = `BDT ${amount.toLocaleString()}`;
         document.getElementById('paymentTripTitle').textContent = button.dataset.tripTitle || 'Trip payment';
         document.getElementById('paymentMessage').hidden = true;
-        bootstrap.Modal.getOrCreateInstance(modal).show();
+
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
+        modalInstance.show();
     });
 
     form.addEventListener('submit', async event => {
@@ -252,23 +269,27 @@ async function loadTrips() {
         try {
             trips = JSON.parse(trimmedResponse);
         } catch (parseError) {
-            // If server returned HTML (login page or error page), redirect to login
             const lower = trimmedResponse.toLowerCase();
             if (lower.includes('login') || lower.includes('<html') || lower.includes('<!doctype')) {
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Unknown response — surface the original error to console and show empty state
             console.error('Failed to parse trips JSON response', parseError, trimmedResponse);
             showEmptyState();
             return;
         }
+
         const safeTrips = Array.isArray(trips) ? trips : [];
         window.__tripsData = safeTrips;
-        const currentTrips = safeTrips;
+
+        if (safeTrips.length === 0) {
+            showEmptyState();
+            return;
+        }
+
         const duplicateKeys = new Set();
-        const tripRows = currentTrips.map(trip => {
+        const tripRows = safeTrips.map(trip => {
             const key = [
                 (trip.title || '').trim().toLowerCase(),
                 trip.destination?.id || '',
@@ -280,12 +301,7 @@ async function loadTrips() {
             return { trip, isDuplicate };
         });
 
-        if (tripRows.length === 0) {
-            showEmptyState();
-            return;
-        }
-
-        container.innerHTML = `${tripRows.map(({ trip, isDuplicate }) => {
+        container.innerHTML = tripRows.map(({ trip, isDuplicate }) => {
             const budgetLimit = Number(trip.budgetLimit) || 0;
             const totalSpent = Number(trip.totalSpent) || 0;
             const remainingBudget = budgetLimit - totalSpent;
@@ -353,9 +369,10 @@ async function loadTrips() {
                     </div>
                 </div>
             `;
-        }).join('')}`;
+        }).join('');
 
         if (window.applyTripFilters) window.applyTripFilters();
+        bindMockPayment();
     } catch (error) {
         console.error('Trip loading error:', error);
 
