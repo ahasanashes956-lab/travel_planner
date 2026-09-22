@@ -164,8 +164,11 @@ namespace TravelPlanner.Controllers
                 Description = model.Description?.Trim(),
                 DestinationId = destination.Id,
                 TripType = model.TripType.Trim(),
-                StartDate = model.StartDate.Date,
-                EndDate = model.EndDate.Date,
+                // HTML date inputs bind as DateTimeKind.Unspecified. Render
+                // PostgreSQL stores these columns as timestamptz, which only
+                // accepts UTC DateTime values through Npgsql.
+                StartDate = DateTime.SpecifyKind(model.StartDate.Date, DateTimeKind.Utc),
+                EndDate = DateTime.SpecifyKind(model.EndDate.Date, DateTimeKind.Utc),
                 NumberOfTravelers = model.NumberOfTravelers,
                 BudgetLimit = model.BudgetLimit,
                 Status = "Planned",
