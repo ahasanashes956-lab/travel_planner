@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: travel-planner-bd
+    runtime: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/current-user
+    autoDeployTrigger: commit
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: travel-planner-db
+          property: connectionString
+      - key: AdminAccount__Password
+        sync: false
+      - key: EmailSettings__SenderEmail
+        sync: false
+      - key: EmailSettings__SenderPassword
+        sync: false
+
+databases:
+  - name: travel-planner-db
+    databaseName: travelplanner
+    user: travelplanner
+    region: singapore
+    plan: free
+    postgresMajorVersion: "17"
