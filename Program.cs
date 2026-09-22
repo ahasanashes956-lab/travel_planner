@@ -9,7 +9,6 @@ using TravelPlanner.Services;
 using TravelPlanner.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddUserSecrets<Program>(optional: true);
 
 // Add services to the container
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -57,7 +56,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", builder =>
     {
-        builder.AllowAnyOrigin()
+         builder.WithOrigins("http://localhost:8000", "http://127.0.0.1:8000")
+             .AllowCredentials()
                .AllowAnyMethod()
                .AllowAnyHeader();
     });
@@ -71,8 +71,6 @@ builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IDestinationRepository, DestinationRepository>();
 builder.Services.AddScoped<IAccommodationRepository, AccommodationRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
-builder.Services.AddHttpClient("TravelAi", client => client.Timeout = TimeSpan.FromSeconds(45));
-builder.Services.AddScoped<IChatService, ChatService>();
 
 var app = builder.Build();
 
@@ -192,14 +190,64 @@ using (var scope = app.Services.CreateScope())
         dbContext.Database.EnsureDeleted();
     }
     dbContext.Database.EnsureCreated();
-    dbContext.Database.ExecuteSqlRaw("IF COL_LENGTH('Destinations', 'IsPopular') IS NULL ALTER TABLE Destinations ADD IsPopular bit NOT NULL CONSTRAINT DF_Destinations_IsPopular DEFAULT 0 WITH VALUES");
-    dbContext.Database.ExecuteSqlRaw("IF COL_LENGTH('Destinations', 'IsPublished') IS NULL ALTER TABLE Destinations ADD IsPublished bit NOT NULL CONSTRAINT DF_Destinations_IsPublished DEFAULT 1 WITH VALUES");
-    dbContext.Database.ExecuteSqlRaw("UPDATE Destinations SET IsPopular = 1 WHERE Name IN ('Paris', 'Bali', 'Tokyo', 'Swiss Alps', 'New York') AND IsPopular = 0");
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID('dbo.Attractions', 'U') IS NULL
+        BEGIN
+            CREATE TABLE [Attractions]
+            (
+                [Id] int NOT NULL IDENTITY,
+                [DestinationId] int NOT NULL,
+                [Name] nvarchar(max) NULL,
+                [Description] nvarchar(max) NULL,
+                [ImageUrl] nvarchar(max) NULL,
+                [Latitude] decimal(9,6) NOT NULL,
+                [Longitude] decimal(9,6) NOT NULL,
+                [Category] nvarchar(max) NULL,
+                [EntryFee] nvarchar(max) NULL,
+                [OpeningHours] nvarchar(max) NULL,
+                [Rating] decimal(3,2) NOT NULL,
+                [CreatedAt] datetime2 NOT NULL,
+                CONSTRAINT [PK_Attractions] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_Attractions_Destinations_DestinationId]
+                    FOREIGN KEY ([DestinationId]) REFERENCES [Destinations] ([Id]) ON DELETE CASCADE
+            );
+            CREATE INDEX [IX_Attractions_DestinationId] ON [Attractions] ([DestinationId]);
+        END");
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF COL_LENGTH('Destinations', 'IsPopular') IS NULL
+        BEGIN
+            ALTER TABLE [Destinations]
+                ADD [IsPopular] bit NOT NULL
+                    CONSTRAINT [DF_Destinations_IsPopular] DEFAULT 0;
+        END");
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF COL_LENGTH('Destinations', 'IsPopular') IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM [Destinations] WHERE [IsPopular] = 1)
+        BEGIN
+            UPDATE [Destinations]
+                SET [IsPopular] = CASE WHEN [AverageRating] >= 4.7 THEN 1 ELSE 0 END;
+        END");
+    dbContext.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID('dbo.DestinationImages', 'U') IS NULL
+        BEGIN
+            CREATE TABLE [DestinationImages]
+            (
+                [Id] int NOT NULL IDENTITY,
+                [DestinationId] int NOT NULL,
+                [ImageUrl] nvarchar(max) NULL,
+                [Title] nvarchar(max) NULL,
+                [Description] nvarchar(max) NULL,
+                [Order] int NOT NULL,
+                [CreatedAt] datetime2 NOT NULL,
+                CONSTRAINT [PK_DestinationImages] PRIMARY KEY ([Id]),
+                CONSTRAINT [FK_DestinationImages_Destinations_DestinationId]
+                    FOREIGN KEY ([DestinationId]) REFERENCES [Destinations] ([Id]) ON DELETE CASCADE
+            );
+            CREATE INDEX [IX_DestinationImages_DestinationId] ON [DestinationImages] ([DestinationId]);
+        END");
     dbContext.Database.ExecuteSqlRaw("IF COL_LENGTH('Reviews', 'TripId') IS NULL ALTER TABLE Reviews ADD TripId int NULL");
     dbContext.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Reviews_Trips_TripId') ALTER TABLE Reviews ADD CONSTRAINT FK_Reviews_Trips_TripId FOREIGN KEY (TripId) REFERENCES Trips(Id) ON DELETE CASCADE");
     dbContext.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Reviews_TripId_UserId' AND object_id = OBJECT_ID('Reviews')) CREATE INDEX IX_Reviews_TripId_UserId ON Reviews(TripId, UserId)");
-    dbContext.Database.ExecuteSqlRaw("IF OBJECT_ID('Payments', 'U') IS NULL CREATE TABLE Payments (Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_Payments PRIMARY KEY, UserId nvarchar(450) NOT NULL, TripId int NOT NULL, TransactionId nvarchar(100) NOT NULL, Amount decimal(18,2) NOT NULL, Currency nvarchar(10) NOT NULL, PaymentMethod nvarchar(50) NOT NULL, Status nvarchar(30) NOT NULL, GatewayResponse nvarchar(max) NULL, CreatedAt datetime2 NOT NULL, PaidAt datetime2 NULL, CONSTRAINT FK_Payments_AspNetUsers_UserId FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE NO ACTION, CONSTRAINT FK_Payments_Trips_TripId FOREIGN KEY (TripId) REFERENCES Trips(Id) ON DELETE CASCADE)");
-    dbContext.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Payments_TripId' AND object_id = OBJECT_ID('Payments')) CREATE INDEX IX_Payments_TripId ON Payments(TripId)");
     DatabaseSeeder.SeedDatabase(dbContext);
     await DatabaseSeeder.SeedDefaultUsersAsync(scope.ServiceProvider);
 }

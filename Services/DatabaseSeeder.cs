@@ -84,26 +84,11 @@ namespace TravelPlanner.Services
         {
             // Check if data already exists
             if (context.Destinations.Any())
-            {
-                EnsureFrontendDestinations(context);
                 return;
-            }
 
             // Seed Destinations
             var destinations = new List<Destination>
             {
-                new Destination
-                {
-                    Name = "Cox's Bazar",
-                    Country = "Bangladesh",
-                    Region = "Cox's Bazar",
-                    Description = "Home to the world's longest natural sea beach with golden sands and sunsets.",
-                    ImageUrl = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop",
-                    BestTimeToVisit = "November to February",
-                    Category = "Beach",
-                    AverageRating = 4.8m,
-                    CreatedAt = DateTime.UtcNow
-                },
                 new Destination
                 {
                     Name = "Paris",
@@ -188,7 +173,6 @@ namespace TravelPlanner.Services
 
             context.Destinations.AddRange(destinations);
             context.SaveChanges();
-            EnsureFrontendDestinations(context);
 
             // Seed Attractions
             var attractions = new List<Attraction>
@@ -222,77 +206,6 @@ namespace TravelPlanner.Services
             };
 
             context.Attractions.AddRange(attractions);
-            context.SaveChanges();
-        }
-
-        private static void EnsureFrontendDestinations(ApplicationDbContext context)
-        {
-            var existingNames = context.Destinations
-                .Select(destination => destination.Name)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var missingDestinations = new[]
-            {
-                new Destination
-                {
-                    Name = "Cox's Bazar",
-                    Country = "Bangladesh",
-                    Region = "Cox's Bazar",
-                    Description = "Home to the world's longest natural sea beach with golden sands and sunsets.",
-                    ImageUrl = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop",
-                    Category = "Beach",
-                    AverageRating = 4.8m
-                },
-                new Destination
-                {
-                    Name = "Sundarbans",
-                    Country = "Bangladesh",
-                    Region = "Khulna",
-                    Description = "Largest mangrove forest and home to the Royal Bengal Tiger.",
-                    ImageUrl = "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1200&auto=format&fit=crop",
-                    Category = "Nature",
-                    AverageRating = 4.9m
-                },
-                new Destination
-                {
-                    Name = "Srimangal",
-                    Country = "Bangladesh",
-                    Region = "Srimangal",
-                    Description = "Tea capital of Bangladesh with rolling tea gardens and serene landscapes.",
-                    ImageUrl = "/images/134248610275204802.jpg",
-                    Category = "Hill",
-                    AverageRating = 4.7m
-                },
-                new Destination
-                {
-                    Name = "Sylhet",
-                    Country = "Bangladesh",
-                    Region = "Sylhet",
-                    Description = "Lush green tea estates, waterfalls and the gateway to northeastern Bangladesh.",
-                    ImageUrl = "/images/Sylhet-Scenic-Tour.jpg",
-                    Category = "Hill",
-                    AverageRating = 4.6m
-                },
-                new Destination
-                {
-                    Name = "Saint Martin's Island",
-                    Country = "Bangladesh",
-                    Region = "Teknaf",
-                    Description = "A small coral island known for clear blue waters and marine life.",
-                    ImageUrl = "/images/beach-saint-martins-island-bangladesh.jpg",
-                    Category = "Island",
-                    AverageRating = 4.8m
-                }
-            };
-
-            var additions = missingDestinations
-                .Where(destination => !existingNames.Contains(destination.Name))
-                .ToList();
-
-            if (additions.Count == 0)
-                return;
-
-            context.Destinations.AddRange(additions);
             context.SaveChanges();
         }
     }

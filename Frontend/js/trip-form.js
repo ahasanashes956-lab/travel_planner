@@ -112,40 +112,22 @@ function prefillDestinationSelection() {
     const hint = document.getElementById('destinationHint');
     if (!select) return;
 
-    const query = new URLSearchParams(window.location.search);
-    const queryDestinationId = query.get('destinationId');
+    const queryDestinationId = new URLSearchParams(window.location.search).get('destinationId');
     const selectedId = queryDestinationId || getFromLocalStorage('selectedDestination');
-    const selectedName = query.get('destinationName')
+    if (selectedId) {
+        const option = Array.from(select.options).find(o => parseInt(o.value) === parseInt(selectedId));
+        if (option) {
+            select.value = selectedId;
+            if (queryDestinationId) {
+                select.innerHTML = '';
+                select.appendChild(option);
+                select.disabled = true;
+            }
+        }
+    }
+
+    const selectedName = new URLSearchParams(window.location.search).get('destinationName')
         || getFromLocalStorage('selectedDestinationName');
-
-    // The selected name is authoritative because static and database IDs can differ.
-    const normalizedName = String(selectedName || '').trim().toLowerCase();
-    let option = normalizedName
-        ? Array.from(select.options).find(item => item.textContent.trim().toLowerCase().startsWith(`${normalizedName},`))
-        : null;
-
-    if (!option && !selectedName && selectedId) {
-        option = Array.from(select.options).find(item => String(item.value) === String(selectedId));
-    }
-
-    if (option && selectedName) {
-        select.innerHTML = '';
-        select.appendChild(option);
-        select.value = option.value;
-        select.disabled = true;
-    } else if (option) {
-        select.value = option.value;
-    } else if (queryDestinationId && selectedName) {
-        // Preserve the selected destination even when it is not yet in the API list.
-        const selectedOption = document.createElement('option');
-        selectedOption.value = queryDestinationId;
-        selectedOption.textContent = `${selectedName}`;
-        select.innerHTML = '';
-        select.appendChild(selectedOption);
-        select.value = queryDestinationId;
-        select.disabled = true;
-    }
-
     if (hint && selectedName) {
         hint.classList.remove('d-none');
         hint.innerHTML = `<i class="fas fa-route me-2"></i>Trip planning is ready for <strong>${selectedName}</strong>. You can adjust the details below.`;

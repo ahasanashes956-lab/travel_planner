@@ -135,38 +135,11 @@
                         <h5 class="mb-0"><i class="fas fa-lock me-2"></i>Security</h5>
                     </div>
                     <div class="card-body">
-                        <button class="btn btn-outline-primary w-100" type="button" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <button class="btn btn-outline-primary w-100">
                             <i class="fas fa-key me-2"></i>Change Password
                         </button>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="changePasswordForm">
-                    <div class="modal-body">
-                        <div id="changePasswordMessage" class="mb-3" role="alert" hidden></div>
-                        <label for="currentPassword" class="form-label">Current Password</label>
-                        <input id="currentPassword" class="form-control mb-3" type="password" autocomplete="current-password" required>
-                        <label for="newPassword" class="form-label">New Password</label>
-                        <input id="newPassword" class="form-control mb-3" type="password" minlength="10" autocomplete="new-password" required>
-                        <div class="form-text mb-3">Use at least 10 characters with uppercase, lowercase, a number, and a special character.</div>
-                        <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
-                        <input id="confirmNewPassword" class="form-control" type="password" minlength="10" autocomplete="new-password" required>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="changePasswordSubmit">Update Password</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -180,6 +153,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="js/app.js?v=20260909-no-bar"></script>
-    <script src="js/profile.js?v=4"></script>
+    <script src="js/profile.js?v=3"></script>
 </body>
 </html>

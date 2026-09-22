@@ -100,21 +100,14 @@ const destinations = [
     }
 })();
 
-// Show the admin link only for the authenticated Identity admin role.
-(async function showAdminNav() {
-    const navLi = document.getElementById('navAdminLi');
-    if (!navLi) return;
-
-    navLi.classList.add('d-none');
+// Show admin link in navbar when adminSession present
+(function showAdminNav() {
     try {
-        const response = await fetch('/api/current-user', { credentials: 'include', cache: 'no-store' });
-        const user = response.ok ? await response.json() : null;
-        if (user?.isAuthenticated && Array.isArray(user.roles) && user.roles.includes('Admin')) {
-            navLi.classList.remove('d-none');
-        }
-    } catch (error) {
-        console.warn('Could not verify admin navigation access.', error);
-    }
+        const navLi = document.getElementById('navAdminLi');
+        if (!navLi) return;
+        const isAdmin = localStorage.getItem('adminSession') === 'true';
+        if (isAdmin) navLi.classList.remove('d-none'); else navLi.classList.add('d-none');
+    } catch (e) { /* ignore */ }
 })();
 
 // ==========================================
@@ -488,27 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof bindNewsletter === 'function') {
         bindNewsletter();
     }
-    loadChatbotAssets();
 });
-
-function loadChatbotAssets() {
-    if (document.body.classList.contains('admin-page')) return;
-
-    if (!document.querySelector('link[data-chatbot-style]')) {
-        const stylesheet = document.createElement('link');
-        stylesheet.rel = 'stylesheet';
-        stylesheet.href = '/css/chatbot.css?v=20260912-chatbox';
-        stylesheet.dataset.chatbotStyle = 'true';
-        document.head.appendChild(stylesheet);
-    }
-
-    if (!document.querySelector('script[data-chatbot-script]')) {
-        const script = document.createElement('script');
-        script.src = '/js/chatbot.js?v=20260912-chatbox';
-        script.dataset.chatbotScript = 'true';
-        document.body.appendChild(script);
-    }
-}
 
 function updateNavigation() {
     const user = getCurrentUser();
@@ -610,14 +583,8 @@ function showDestinationDetails(id) {
 
     if (modalTitle) modalTitle.textContent = dest.name;
     if (modalBody) {
-        const imageUrl = typeof getDestinationImage === 'function'
-            ? getDestinationImage(dest)
-            : dest.image;
-        const fallbackImage = typeof localDestinationImageFallback === 'string'
-            ? localDestinationImageFallback
-            : '/images/travel-placeholder.svg';
         modalBody.innerHTML = `
-            <img src="${imageUrl}" class="img-fluid rounded mb-3" alt="${dest.name}" onerror="this.onerror=null; this.src='${fallbackImage}';" />
+            <img src="${dest.image}" class="img-fluid rounded mb-3" alt="${dest.name}" />
             <h5 class="fw-bold">${dest.name}, ${dest.country}</h5>
             <p class="text-muted">${dest.description}</p>
             <div class="mb-3">

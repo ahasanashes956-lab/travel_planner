@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using TravelPlanner.Models;
 using TravelPlanner.Services;
 
@@ -267,8 +266,7 @@ namespace TravelPlanner.Controllers
                     UserName = model.Email,
                     Email = model.Email,
                     FirstName = model.FirstName ?? "",
-                    LastName = model.LastName ?? "",
-                    EmailConfirmed = true // Auto-confirm for testing
+                    LastName = model.LastName ?? ""
                 };
 
                 _logger.LogInformation($"Creating user: {model.Email}");
@@ -277,7 +275,16 @@ namespace TravelPlanner.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"User created successfully: {user.Id}");
-                    return Ok(new { message = "Registration successful", user = new { id = user.Id, email = user.Email } });
+                    var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var confirmationLink = Url.Action("ConfirmEmail", "Account",
+                        new { userId = user.Id, token }, protocol: Request.Scheme);
+                    await _emailService.SendConfirmationEmailAsync(user.Email!, confirmationLink!);
+
+                    return Ok(new
+                    {
+                        message = "Registration successful. Please check your email to confirm your account.",
+                        user = new { id = user.Id, email = user.Email }
+                    });
                 }
 
                 var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
@@ -484,43 +491,16 @@ namespace TravelPlanner.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email.Trim());
             if (user == null)
-                return Ok(new { message = "If the email exists, reset instructions are ready." });
+                return Ok(new { message = "If the email exists, reset instructions have been sent." });
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var resetLink = $"{Request.Scheme}://{Request.Host}/reset-password.html?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(token)}";
+            await _emailService.SendPasswordResetEmailAsync(user.Email!, resetLink);
 
             return Ok(new
             {
-                message = "Password reset link generated",
-                resetLink
+                message = "If the email exists, reset instructions have been sent."
             });
-        }
-
-        [HttpPost("/api/change-password")]
-        [Authorize]
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> ChangePasswordApi([FromBody] ChangePasswordApiViewModel model)
-        {
-            if (model == null || string.IsNullOrWhiteSpace(model.CurrentPassword) ||
-                string.IsNullOrWhiteSpace(model.NewPassword) || string.IsNullOrWhiteSpace(model.ConfirmPassword))
-                return BadRequest(new { message = "Current password, new password, and confirmation are required" });
-
-            if (model.NewPassword != model.ConfirmPassword)
-                return BadRequest(new { message = "Passwords do not match" });
-
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-                return Unauthorized(new { message = "Please log in again" });
-
-            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
-            if (!result.Succeeded)
-            {
-                var errorMessages = string.Join(" ", result.Errors.Select(error => error.Description));
-                return BadRequest(new { message = errorMessages });
-            }
-
-            await _signInManager.RefreshSignInAsync(user);
-            return Ok(new { message = "Password changed successfully" });
         }
 
         [HttpPost("/api/reset-password")]
@@ -596,13 +576,6 @@ namespace TravelPlanner.Controllers
     {
         public string? Email { get; set; }
         public string? Token { get; set; }
-        public string? NewPassword { get; set; }
-        public string? ConfirmPassword { get; set; }
-    }
-
-    public class ChangePasswordApiViewModel
-    {
-        public string? CurrentPassword { get; set; }
         public string? NewPassword { get; set; }
         public string? ConfirmPassword { get; set; }
     }
