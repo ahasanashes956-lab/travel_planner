@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Npgsql;
 using TravelPlanner.Data;
 using TravelPlanner.Models;
 using TravelPlanner.Services;
@@ -15,6 +16,28 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("ConnectionStrings:DefaultConnection must be configured.");
+}
+
+// Render exposes Postgres connection details as a postgresql:// URL, while
+// Npgsql expects a semicolon-delimited connection string.
+if (Uri.TryCreate(connectionString, UriKind.Absolute, out var databaseUri) &&
+    (databaseUri.Scheme.Equals("postgres", StringComparison.OrdinalIgnoreCase) ||
+     databaseUri.Scheme.Equals("postgresql", StringComparison.OrdinalIgnoreCase)))
+{
+    var credentials = databaseUri.UserInfo.Split(':', 2);
+    if (credentials.Length != 2 || string.IsNullOrWhiteSpace(databaseUri.AbsolutePath.Trim('/')))
+    {
+        throw new InvalidOperationException("The PostgreSQL connection URL is invalid.");
+    }
+
+    connectionString = new NpgsqlConnectionStringBuilder
+    {
+        Host = databaseUri.Host,
+        Port = databaseUri.IsDefaultPort ? 5432 : databaseUri.Port,
+        Database = databaseUri.AbsolutePath.Trim('/'),
+        Username = Uri.UnescapeDataString(credentials[0]),
+        Password = Uri.UnescapeDataString(credentials[1])
+    }.ConnectionString;
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
