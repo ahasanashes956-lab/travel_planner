@@ -266,7 +266,13 @@ namespace TravelPlanner.Controllers
                     UserName = model.Email,
                     Email = model.Email,
                     FirstName = model.FirstName ?? "",
-                    LastName = model.LastName ?? ""
+                    LastName = model.LastName ?? "",
+                    // The public SPA is deployed without an SMTP provider.
+                    // Activate API registrations immediately so users are not
+                    // stranded after an email-delivery failure.
+                    EmailConfirmed = true,
+                    IsVerified = true,
+                    IsActive = true
                 };
 
                 _logger.LogInformation($"Creating user: {model.Email}");
@@ -275,14 +281,9 @@ namespace TravelPlanner.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"User created successfully: {user.Id}");
-                    var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    var confirmationLink = Url.Action("ConfirmEmail", "Account",
-                        new { userId = user.Id, token }, protocol: Request.Scheme);
-                    await _emailService.SendConfirmationEmailAsync(user.Email!, confirmationLink!);
-
                     return Ok(new
                     {
-                        message = "Registration successful. Please check your email to confirm your account.",
+                        message = "Registration successful.",
                         user = new { id = user.Id, email = user.Email }
                     });
                 }
