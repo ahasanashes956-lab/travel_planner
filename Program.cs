@@ -12,8 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("ConnectionStrings:DefaultConnection must be configured.");
+}
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // Add Identity services
 builder.Services
@@ -181,76 +186,17 @@ app.MapFallback(async context =>
     }
 });
 
-// Create or update database
+// Create and seed the initial PostgreSQL database. Add EF migrations before
+// evolving an already-populated production schema.
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    if (dbContext.Database.CanConnect() && dbContext.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM sys.tables WHERE name = 'Destinations'").Single() == 0)
-    {
-        dbContext.Database.EnsureDeleted();
-    }
-    dbContext.Database.EnsureCreated();
-    dbContext.Database.ExecuteSqlRaw(@"
-        IF OBJECT_ID('dbo.Attractions', 'U') IS NULL
-        BEGIN
-            CREATE TABLE [Attractions]
-            (
-                [Id] int NOT NULL IDENTITY,
-                [DestinationId] int NOT NULL,
-                [Name] nvarchar(max) NULL,
-                [Description] nvarchar(max) NULL,
-                [ImageUrl] nvarchar(max) NULL,
-                [Latitude] decimal(9,6) NOT NULL,
-                [Longitude] decimal(9,6) NOT NULL,
-                [Category] nvarchar(max) NULL,
-                [EntryFee] nvarchar(max) NULL,
-                [OpeningHours] nvarchar(max) NULL,
-                [Rating] decimal(3,2) NOT NULL,
-                [CreatedAt] datetime2 NOT NULL,
-                CONSTRAINT [PK_Attractions] PRIMARY KEY ([Id]),
-                CONSTRAINT [FK_Attractions_Destinations_DestinationId]
-                    FOREIGN KEY ([DestinationId]) REFERENCES [Destinations] ([Id]) ON DELETE CASCADE
-            );
-            CREATE INDEX [IX_Attractions_DestinationId] ON [Attractions] ([DestinationId]);
-        END");
-    dbContext.Database.ExecuteSqlRaw(@"
-        IF COL_LENGTH('Destinations', 'IsPopular') IS NULL
-        BEGIN
-            ALTER TABLE [Destinations]
-                ADD [IsPopular] bit NOT NULL
-                    CONSTRAINT [DF_Destinations_IsPopular] DEFAULT 0;
-        END");
-    dbContext.Database.ExecuteSqlRaw(@"
-        IF COL_LENGTH('Destinations', 'IsPopular') IS NOT NULL
-           AND NOT EXISTS (SELECT 1 FROM [Destinations] WHERE [IsPopular] = 1)
-        BEGIN
-            UPDATE [Destinations]
-                SET [IsPopular] = CASE WHEN [AverageRating] >= 4.7 THEN 1 ELSE 0 END;
-        END");
-    dbContext.Database.ExecuteSqlRaw(@"
-        IF OBJECT_ID('dbo.DestinationImages', 'U') IS NULL
-        BEGIN
-            CREATE TABLE [DestinationImages]
-            (
-                [Id] int NOT NULL IDENTITY,
-                [DestinationId] int NOT NULL,
-                [ImageUrl] nvarchar(max) NULL,
-                [Title] nvarchar(max) NULL,
-                [Description] nvarchar(max) NULL,
-                [Order] int NOT NULL,
-                [CreatedAt] datetime2 NOT NULL,
-                CONSTRAINT [PK_DestinationImages] PRIMARY KEY ([Id]),
-                CONSTRAINT [FK_DestinationImages_Destinations_DestinationId]
-                    FOREIGN KEY ([DestinationId]) REFERENCES [Destinations] ([Id]) ON DELETE CASCADE
-            );
-            CREATE INDEX [IX_DestinationImages_DestinationId] ON [DestinationImages] ([DestinationId]);
-        END");
-    dbContext.Database.ExecuteSqlRaw("IF COL_LENGTH('Reviews', 'TripId') IS NULL ALTER TABLE Reviews ADD TripId int NULL");
-    dbContext.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Reviews_Trips_TripId') ALTER TABLE Reviews ADD CONSTRAINT FK_Reviews_Trips_TripId FOREIGN KEY (TripId) REFERENCES Trips(Id) ON DELETE CASCADE");
-    dbContext.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Reviews_TripId_UserId' AND object_id = OBJECT_ID('Reviews')) CREATE INDEX IX_Reviews_TripId_UserId ON Reviews(TripId, UserId)");
+    await dbContext.Database.EnsureCreatedAsync();
     DatabaseSeeder.SeedDatabase(dbContext);
     await DatabaseSeeder.SeedDefaultUsersAsync(scope.ServiceProvider);
 }
 
 Console.WriteLine("🚀 Travel Planner running on http://localhost:8000");
-app.Run("http://localhost:8000");
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8000";
+Console.WriteLine($"Travel Planner running on port {port}");
+app.Run($"http://0.0.0.0:{port}");
